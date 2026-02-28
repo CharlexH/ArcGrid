@@ -30,6 +30,7 @@
 
 - Node.js (v18+)
 - npm
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (Optional, for Cloudflare deployment)
 
 #### Installation
 
@@ -45,11 +46,11 @@ npm install
 #### Running the App
 
 ```bash
-# Start the development server
+# Start the development server (runs Tailwind CLI + Wrangler Pages dev)
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`.
+The application will be available at `http://localhost:8788`.
 
 ### ⚙️ Environment Configuration
 
@@ -57,15 +58,15 @@ Copy `.env.example` to `.env` and fill in the required fields:
 
 ```env
 GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-3.1-flash-image-preview
+GEMINI_MODEL=gemini-3.1-flash-preview
 ```
 
 *Note: The Gemini API is required for the experimental image-to-svg vectorization feature.*
 
 ### 🛠 Tech Stack
 
-- **Frontend**: Vanilla HTML5, CSS3 (Modern Glassmorphism Design), JavaScript (ES Modules).
-- **Backend**: Node.js, Express.
+- **Frontend**: Vanilla HTML5, Tailwind CSS, JavaScript (ES Modules).
+- **Backend / Hosting**: Cloudflare Pages Functions (Hono.js).
 - **AI Integration**: Google Gemini API for image analysis and vectorization.
 
 ---
@@ -96,6 +97,7 @@ GEMINI_MODEL=gemini-3.1-flash-image-preview
 
 - Node.js (v18+)
 - npm
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (可选，用于 Cloudflare 部署)
 
 #### 安装步骤
 
@@ -111,11 +113,11 @@ npm install
 #### 启动应用
 
 ```bash
-# 启动开发服务器
+# 启动开发服务器 (同时运行 Tailwind CLI 和 Wrangler Pages dev)
 npm run dev
 ```
 
-访问 `http://localhost:3000` 即可开始使用。
+访问 `http://localhost:8788` 即可开始使用。
 
 ### ⚙️ 环境配置
 
@@ -123,15 +125,15 @@ npm run dev
 
 ```env
 GEMINI_API_KEY=你的API密钥
-GEMINI_MODEL=gemini-3.1-flash-image-preview
+GEMINI_MODEL=gemini-3.1-flash-preview
 ```
 
 *注意：Gemini API 仅在使用实验性的“图像转 SVG”功能时需要。*
 
 ### 🛠 技术栈
 
-- **前端**: 原生 HTML5, CSS3 (现代毛玻璃设计风格), JavaScript (ES Modules)。
-- **后端**: Node.js, Express。
+- **前端**: 原生 HTML5, Tailwind CSS, JavaScript (ES Modules)。
+- **后端 / 部署**: Cloudflare Pages Functions (Hono.js)。
 - **AI 集成**: 接入 Google Gemini API 进行图像分析与矢量化。
 
 ---

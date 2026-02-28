@@ -7,7 +7,7 @@ const i18n = {
     pasteSvg: "Or paste SVG Code",
     analyzeBtn: "Analyze SVG",
     phase2Title: "Experimental Features",
-    phase2Desc: "Requires Gemini API Key",
+    phase2Desc: "Requires Gemini API",
     apiKeyLabel: "API Key",
     apiKeyMissing: "Please enter your Gemini API Key first.",
     uploadImg: "Upload Image",
@@ -39,7 +39,6 @@ const i18n = {
     cFull: "Full",
     cCurves: "Curves",
     cLines: "Lines",
-    operationSuccess: "Operation Successful",
     copyright: "© 2024 Charlex"
   },
   zh: {
@@ -50,7 +49,7 @@ const i18n = {
     pasteSvg: "或粘贴 SVG 代码",
     analyzeBtn: "分析 SVG",
     phase2Title: "实验功能",
-    phase2Desc: "需要 Gemini API Key",
+    phase2Desc: "需要 Gemini API",
     apiKeyLabel: "API Key",
     apiKeyMissing: "请先输入 Gemini API Key。",
     uploadImg: "上传图片",
@@ -82,7 +81,6 @@ const i18n = {
     cFull: "全部",
     cCurves: "曲线",
     cLines: "直线",
-    operationSuccess: "操作成功",
     copyright: "© 2024 Charlex"
   }
 };
@@ -501,49 +499,50 @@ imageFileInput.addEventListener("change", async (event) => {
   reader.readAsDataURL(file);
 });
 
+// SVG icons for button states
+const spinnerSvg = `<svg class="btn-spinner" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" opacity="0.25"/><path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const checkSvg = `<svg class="btn-check" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const vectorizeBtnDefaultText = () => t('vectorizeBtn');
+
 vectorizeBtn.addEventListener("click", async () => {
-  const originalText = vectorizeBtn.textContent;
+  // Early validation — don't change button state for these
+  const apiKey = geminiApiKeyInput?.value?.trim();
+  if (!apiKey) {
+    setStatus(t('apiKeyMissing'));
+    geminiApiKeyInput?.focus();
+    return;
+  }
+  if (!state.imageBase64) {
+    setStatus(t('vectorizationFailed'));
+    return;
+  }
+
+  // Enter loading state
+  vectorizeBtn.disabled = true;
+  vectorizeBtn.innerHTML = `${spinnerSvg}<span>${vectorizeBtnDefaultText()}</span>`;
+
   try {
-    const apiKey = geminiApiKeyInput?.value?.trim();
-    if (!apiKey) {
-      setStatus(t('apiKeyMissing'));
-      geminiApiKeyInput?.focus();
-      return;
-    }
-    if (!state.imageBase64) {
-      setStatus(t('vectorizationFailed'));
-      return;
-    }
-
-    vectorizeBtn.disabled = true;
-    vectorizeBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
     setStatus(t('submitting'));
-    vectorizeBtn.textContent = t('submitting');
     const svgText = await geminiVectorize(apiKey, state.imageBase64, state.imageMimeType);
 
     svgInput.value = svgText;
-
-    vectorizeBtn.textContent = t('analyzing');
     await analyzeSvg(svgText);
-
     setStatus(t('vectorized', 'live'));
-    vectorizeBtn.textContent = t('operationSuccess');
 
-    setTimeout(() => {
-      vectorizeBtn.disabled = false;
-      vectorizeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      vectorizeBtn.textContent = originalText;
-    }, 1000);
+    // Success: show checkmark
+    vectorizeBtn.innerHTML = `${checkSvg}<span>${vectorizeBtnDefaultText()}</span>`;
+    await new Promise(resolve => setTimeout(resolve, 2000));
   } catch (error) {
-    if (error?.message?.includes("RATE_LIMIT") || error?.message?.includes("429")) {
+    if (error.message.includes("RATE_LIMIT") || error.message.includes("429")) {
       setStatus(t('vectorizationRateLimit'));
     } else {
       setStatus(error.message);
     }
+  } finally {
+    // Restore default state
     vectorizeBtn.disabled = false;
-    vectorizeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    vectorizeBtn.textContent = originalText;
+    vectorizeBtn.textContent = vectorizeBtnDefaultText();
   }
 });
 

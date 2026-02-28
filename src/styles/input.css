@@ -216,3 +216,29 @@ input[type="range"]:hover,
 input[type="range"]:active {
   accent-color: var(--color-accent-hover);
 }
+
+/* Vectorize button loading / success states */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#vectorizeBtn .btn-spinner {
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+#vectorizeBtn .btn-check {
+  flex-shrink: 0;
+}
+
+#vectorizeBtn svg+span {
+  margin-left: 6px;
+}
+
+#vectorizeBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
