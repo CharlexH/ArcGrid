@@ -13,9 +13,13 @@
 - **Double-Track Input System**:
   - **SVG Direct Input**: Upload or paste SVG code to analyze existing vector shapes.
   - **AI Image Vectorization**: (Experimental) Convert raster images (PNG/JPG) to SVG using Gemini AI before running the construction analysis.
-- **Intelligent Geometry Analysis**: Automatically detects circles, arcs, and alignment lines to create "Candidate" construction guides.
-- **Interactive Customization**:
+- **Intelligent Geometry Analysis**:
+  - Automatically detects circles, arcs, and alignment lines to create "Candidate" construction guides.
+  - **Robust SVG Processing**: Automatically handles stroke-to-fill conversions, preserves hollow effects, and ignores non-renderable `<defs>`.
+- **Interactive Customization & Visualization**:
   - Toggle visibility for the logo, guides, and annotations.
+  - **Adjustable Analysis Tolerance**: Fine-tune geometry detection sensitivity in real-time using the tolerance slider.
+  - **Dynamic Growth Animation**: Visually engaging animated line-drawing effect during SVG rendering.
   - Adjust guide line colors and weights (Curve vs. Line) in real-time.
   - Switch between multiple analysis candidates to find the best geometric fit.
 - **Professional Export**: Export your finalized construction guide as high-quality **SVG** or **PDF**.
@@ -75,9 +79,13 @@ GEMINI_MODEL=gemini-3.1-flash-image-preview
 - **双轨输入系统**:
   - **SVG 直接输入**: 支持上传或粘贴 SVG 代码，直接对现有矢量形状进行分析。
   - **AI 图像矢量化**: (实验性) 使用 Gemini AI 将位图 (PNG/JPG) 转换为 SVG，随后进入分析流程。
-- **智能几何分析**: 自动识别圆形、圆弧和对齐线，生成多种“候选”辅助线方案。
-- **交互式自定义**:
+- **智能几何分析**:
+  - 自动识别圆形、圆弧和对齐线，生成多种“候选”辅助线方案。
+  - **强大的 SVG 处理**: 自动处理描边到填充的转换，保留镂空效果，并智能忽略 `<defs>` 等非渲染内容。
+- **交互式自定义与可视化**:
   - 可动态切换 Logo 层、辅助线层和标注层的显示。
+  - **动态容差调整**: 使用滑块实时微调几何特征检测的灵敏度。
+  - **生动的生长动画**: 在渲染 SVG 时提供视觉上极具吸引力的线条动态绘制效果。
   - 实时调整辅助线的颜色和粗细（曲线 vs 直线）。
   - 在多个分析候选方案中切换，寻找最精准的几何匹配。
 - **专业导出**: 支持将生成的制图规范导出为高质量的 **SVG** 或 **PDF** 格式。
