@@ -18,6 +18,7 @@ const i18n = {
     layerAnnotations: "annotations",
     curve: "Curve",
     line: "Line",
+    tolerance: "Tolerance",
     statusReady: "Ready.",
     noAnalysis: "No analysis yet.",
     analyzing: "Analyzing SVG...",
@@ -56,6 +57,7 @@ const i18n = {
     layerAnnotations: "标注",
     curve: "曲线",
     line: "直线",
+    tolerance: "容差",
     statusReady: "就绪。",
     noAnalysis: "暂无分析结果。",
     analyzing: "正在分析 SVG...",
@@ -176,6 +178,56 @@ function selectedCandidate() {
   );
 }
 
+function animateGrowth() {
+  const svg = svgCanvas.querySelector('svg');
+  if (!svg) return;
+
+  const elements = svg.querySelectorAll('line, circle');
+  if (elements.length === 0) return;
+
+  elements.forEach((el) => {
+    let len;
+    if (el.tagName === 'line') {
+      const x1 = parseFloat(el.getAttribute('x1'));
+      const y1 = parseFloat(el.getAttribute('y1'));
+      const x2 = parseFloat(el.getAttribute('x2'));
+      const y2 = parseFloat(el.getAttribute('y2'));
+      len = Math.hypot(x2 - x1, y2 - y1);
+    } else if (el.tagName === 'circle') {
+      const r = parseFloat(el.getAttribute('r'));
+      len = 2 * Math.PI * r;
+    }
+    if (!len || len <= 0) return;
+
+    // Save original dash pattern so we can restore it after the animation
+    const originalDasharray = el.getAttribute('stroke-dasharray') || '';
+
+    // Randomised speed & delay
+    const duration = 0.6 + Math.random() * 0.6;   // 0.6s – 1.2s
+    const delay = Math.random() * 0.2;          // 0 – 200ms
+
+    // Hide path initially (single dash covering full length)
+    el.style.strokeDasharray = len;
+    el.style.strokeDashoffset = len;
+    el.style.transition = 'none';
+
+    // Restore original dash pattern after animation completes
+    el.addEventListener('transitionend', () => {
+      el.style.transition = 'none';
+      el.style.strokeDasharray = originalDasharray;
+      el.style.strokeDashoffset = '';
+    }, { once: true });
+
+    // Force reflow, then animate
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.style.transition = `stroke-dashoffset ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`;
+        el.style.strokeDashoffset = '0';
+      });
+    });
+  });
+}
+
 function renderPreview() {
   if (!state.analysis) {
     svgCanvas.innerHTML = `<span style="color: #98a2ad">${t('noAnalysis')}</span>`;
@@ -195,16 +247,25 @@ function renderPreview() {
   const fwA = bbox.width * 0.03;
 
   let originalContent = "";
+  let svgRootAttrs = "";
   if (state.analysis.input.raw) {
     const rawSvg = state.analysis.input.raw;
-    const match = rawSvg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
-    if (match) {
-      originalContent = match[1];
+    const svgTagMatch = rawSvg.match(/<svg([^>]*)>([\s\S]*?)<\/svg>/i);
+    if (svgTagMatch) {
+      originalContent = svgTagMatch[2];
+      // Extract presentation attributes from root <svg> to preserve on wrapper <g>
+      const attrs = svgTagMatch[1];
+      const inheritParts = [];
+      for (const name of ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity"]) {
+        const m = attrs.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, "i"));
+        if (m) inheritParts.push(`${name}="${m[1]}"`);
+      }
+      svgRootAttrs = inheritParts.join(" ");
     }
   }
 
   const logoLayer = layerSet.has("logo")
-    ? `<g opacity="0.6">${originalContent}</g>`
+    ? `<g opacity="0.6" ${svgRootAttrs}>${originalContent}</g>`
     : "";
 
   const lineColorStr = document.querySelector("#lineColor")?.value || "#ff6d00";
@@ -240,6 +301,8 @@ function renderPreview() {
   const padY = bbox.height * 0.2;
   svgCanvas.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2 + fwA * 4}" style="width: 100%; max-height: 560px;">\n${logoLayer}\n${guideCircles}\n${guideLines}\n${annotationLayer}\n</svg>`;
 
+  animateGrowth();
+
   signatureEl.textContent = `${t('signature')}${state.analysis.signature}`;
 
   if (state.analysis.candidates && state.analysis.candidates.length > 0) {
@@ -272,6 +335,9 @@ function renderPreview() {
 
 async function analyzeSvg(svgText) {
   setStatus(t('analyzing'));
+  const toleranceInput = document.querySelector("#toleranceRange");
+  const toleranceMult = toleranceInput ? parseFloat(toleranceInput.value) : 2.5;
+
   const response = await fetch("/api/v1/logo/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -280,6 +346,7 @@ async function analyzeSvg(svgText) {
       strategy: strategySelect.value,
       constraints: {
         minScore: 0.5,
+        toleranceMult,
       },
     }),
   });
@@ -393,6 +460,7 @@ async function exportResult(format) {
         circleColor: document.querySelector("#circleColor")?.value || "#0057ff",
         lineWeightMult: parseFloat(document.querySelector("#lineWeight")?.value || "0.15") * 10,
         circleWeightMult: parseFloat(document.querySelector("#circleWeight")?.value || "0.15") * 10,
+        toleranceMult: parseFloat(document.querySelector("#toleranceRange")?.value || "2.5"),
       }
     }),
   });
@@ -436,6 +504,31 @@ exportPdfBtn.addEventListener("click", async () => {
   input?.addEventListener("input", renderPreview);
 });
 
+const toleranceRange = document.querySelector("#toleranceRange");
+const toleranceVal = document.querySelector("#toleranceVal");
+if (toleranceRange && toleranceVal) {
+  toleranceRange.addEventListener("input", (e) => {
+    toleranceVal.textContent = parseFloat(e.target.value).toFixed(1);
+  });
+  toleranceRange.addEventListener("change", async () => {
+    const rawSvg = svgInput.value.trim() || MOCK_FALLBACK_SVG;
+    try {
+      await analyzeSvg(rawSvg);
+    } catch (error) {
+      setStatus(error.message);
+    }
+  });
+}
+
 svgInput.value = MOCK_FALLBACK_SVG;
 setStatus(t('copyright'));
 updateUI();
+
+// Auto-generate on load
+(async () => {
+  try {
+    await analyzeSvg(MOCK_FALLBACK_SVG);
+  } catch (error) {
+    console.warn("Auto-analysis failed:", error);
+  }
+})();

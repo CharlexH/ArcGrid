@@ -44,6 +44,7 @@ export function analyzeLogo({ svgText, strategy = "auto", constraints = {} }) {
     paths: normalized.paths,
     bbox: normalized.bbox,
     strategy,
+    constraints,
     mockId: parsed.mockId,
   });
 

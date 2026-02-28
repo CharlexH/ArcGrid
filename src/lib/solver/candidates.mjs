@@ -6,7 +6,7 @@ import {
   isApproxCircularArc
 } from "./math.mjs";
 
-function getGeometricGuides(paths, bbox, mode, shouldDedup = true) {
+function getGeometricGuides(paths, bbox, mode, toleranceMult = 1.0, shouldDedup = true) {
   const lines = [];
   const circles = [];
   const lineKeys = new Set();
@@ -64,7 +64,8 @@ function getGeometricGuides(paths, bbox, mode, shouldDedup = true) {
           const dy = pt1.anchor[1] - center[1];
           const radius = Math.sqrt(dx * dx + dy * dy);
 
-          if (radius > 0 && isApproxCircularArc(pt1.anchor, pt1.rightDirection, pt2.leftDirection, pt2.anchor, center, radius)) {
+          // Pass toleranceMult to isApproxCircularArc
+          if (radius > 0 && isApproxCircularArc(pt1.anchor, pt1.rightDirection, pt2.leftDirection, pt2.anchor, center, radius, toleranceMult)) {
             const key = `${center[0].toFixed(3)},${center[1].toFixed(3)},${radius.toFixed(3)}`;
             if (!shouldDedup || !circleKeys.has(key)) {
               circleKeys.add(key);
@@ -84,7 +85,9 @@ function getGeometricGuides(paths, bbox, mode, shouldDedup = true) {
   return { lines, circles };
 }
 
-export function generateCandidates({ paths, bbox, strategy, mockId }) {
+export function generateCandidates({ paths, bbox, strategy, constraints = {}, mockId }) {
+  const toleranceMult = constraints.toleranceMult ?? 1.0;
+
   if (mockId === "MOCK_LOGO_ARCGRID_V1") {
     // Keep mock fallback exactly as it was for UI demonstration fixed state
     return [
@@ -105,10 +108,10 @@ export function generateCandidates({ paths, bbox, strategy, mockId }) {
     ];
   }
 
-  // Generate three variants based on the algorithm modes
-  const allGeom = getGeometricGuides(paths, bbox, "ALL", true);
-  const straightGeom = getGeometricGuides(paths, bbox, "STRAIGHT", true);
-  const curveGeom = getGeometricGuides(paths, bbox, "CURVE", true);
+  // Generate three variants based on the algorithm modes, passing toleranceMult
+  const allGeom = getGeometricGuides(paths, bbox, "ALL", toleranceMult, true);
+  const straightGeom = getGeometricGuides(paths, bbox, "STRAIGHT", toleranceMult, true);
+  const curveGeom = getGeometricGuides(paths, bbox, "CURVE", toleranceMult, true);
 
   const calcComplexity = (g) => Math.min(1.0, (g.lines.length + g.circles.length) * 0.05);
 

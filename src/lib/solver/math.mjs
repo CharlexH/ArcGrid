@@ -104,9 +104,10 @@ export function cubicBezierPoint(p0, p1, p2, p3, t) {
   ];
 }
 
-export function isApproxCircularArc(p1, h1, h2, p3, center, radius) {
+export function isApproxCircularArc(p1, h1, h2, p3, center, radius, toleranceMult = 1.0) {
   if (!center || !(radius > 0)) return false;
-  const tol = Math.max(0.2, radius * 0.01);
+  // Use toleranceMult here
+  const tol = Math.max(0.2, radius * 0.01) * toleranceMult;
   const d1 = len2(sub2(p1, center));
   const d3 = len2(sub2(p3, center));
   if (Math.abs(d1 - radius) > tol) return false;

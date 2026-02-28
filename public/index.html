@@ -622,29 +622,44 @@
       <div class="canvas-wrapper"
         style="border: none; border-radius: 0 0 var(--radius) var(--radius); flex: 1; min-height: 600px;">
         <div class="floating-header">
-          <div id="layersControl" class="segmented-control" style="display: none;">
-            <label data-i18n="layerLogo"><input id="toggleLogo" type="checkbox" checked /> logo</label>
-            <label data-i18n="layerGuides"><input id="toggleGuides" type="checkbox" checked /> guides</label>
-            <label data-i18n="layerAnnotations"><input id="toggleAnnotations" type="checkbox" checked />
-              annotations</label>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+          <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div id="layersControl" class="segmented-control" style="display: none;">
+              <label data-i18n="layerLogo"><input id="toggleLogo" type="checkbox" checked /> logo</label>
+              <label data-i18n="layerGuides"><input id="toggleGuides" type="checkbox" checked /> guides</label>
+              <label data-i18n="layerAnnotations"><input id="toggleAnnotations" type="checkbox" checked />
+                annotations</label>
+            </div>
             <div id="candidateList" class="segmented-control" style="display: none;">
               <!-- Candidates will be rendered here as radio buttons -->
             </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
             <div id="controlsWrapper" class="segmented-control"
               style="display: none; padding: 6px 12px; gap: 16px; align-items: center; color: var(--muted); font-size: 13px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span data-i18n="curve">Curve</span>
-                <input type="color" id="circleColor" class="small-color" value="#0057ff" title="Curve Color" />
-                <input type="number" id="circleWeight" value="0.15" step="0.05" min="0.05"
-                  style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Curve Weight" />
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span data-i18n="line">Line</span>
-                <input type="color" id="lineColor" class="small-color" value="#ff6d00" title="Line Color" />
-                <input type="number" id="lineWeight" value="0.15" step="0.05" min="0.05"
-                  style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Line Weight" />
+              <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span data-i18n="curve">Curve</span>
+                    <input type="color" id="circleColor" class="small-color" value="#0057ff" title="Curve Color" />
+                    <input type="number" id="circleWeight" value="0.15" step="0.05" min="0.05"
+                      style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Curve Weight" />
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span data-i18n="line">Line</span>
+                    <input type="color" id="lineColor" class="small-color" value="#ff6d00" title="Line Color" />
+                    <input type="number" id="lineWeight" value="0.15" step="0.05" min="0.05"
+                      style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Line Weight" />
+                  </div>
+                </div>
+                <div
+                  style="display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-top: 6px; border-top: 1px solid var(--line);">
+                  <span data-i18n="tolerance">Tolerance</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="range" id="toleranceRange" min="0.1" max="10" step="0.1" value="2.5"
+                      style="width: 80px;" title="Tolerance Multiplier" />
+                    <span id="toleranceVal" style="width: 24px; font-variant-numeric: tabular-nums;">2.5</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

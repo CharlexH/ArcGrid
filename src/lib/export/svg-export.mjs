@@ -22,13 +22,23 @@ export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "a
   const padY = bbox.height * 0.2;
 
   let originalContent = "";
+  let svgRootAttrs = "";
   if (input.raw) {
-    const match = input.raw.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
-    if (match) originalContent = match[1];
+    const svgTagMatch = input.raw.match(/<svg([^>]*)>([\s\S]*?)<\/svg>/i);
+    if (svgTagMatch) {
+      originalContent = svgTagMatch[2];
+      const attrs = svgTagMatch[1];
+      const inheritParts = [];
+      for (const name of ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity"]) {
+        const m = attrs.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, "i"));
+        if (m) inheritParts.push(`${name}="${m[1]}"`);
+      }
+      svgRootAttrs = inheritParts.join(" ");
+    }
   }
 
   if (includeLayers.includes("logo")) {
-    layers.push(`<g id="logo-layer" opacity="0.6">${originalContent}</g>`);
+    layers.push(`<g id="logo-layer" opacity="0.6" ${svgRootAttrs}>${originalContent}</g>`);
   }
 
   if (includeLayers.includes("guides")) {

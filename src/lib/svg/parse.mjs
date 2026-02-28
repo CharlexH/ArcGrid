@@ -308,11 +308,16 @@ export function parseSvg(svgText) {
     throw new ApiFailure(400, "INVALID_SVG", "SVG payload is missing or invalid.");
   }
 
+  // Strip non-rendering containers so their children aren't matched as geometry
+  const cleanedSvg = svgText
+    .replace(/<defs[\s\S]*?<\/defs>/gi, "")
+    .replace(/<clipPath[\s\S]*?<\/clipPath>/gi, "");
+
   const paths = [];
   let index = 1;
   let match;
 
-  while ((match = PATH_TAG_REGEX.exec(svgText)) !== null) {
+  while ((match = PATH_TAG_REGEX.exec(cleanedSvg)) !== null) {
     const tag = match[0];
     const d = extractAttr(tag, "d");
     if (!d) continue;
@@ -331,27 +336,27 @@ export function parseSvg(svgText) {
     }
   }
 
-  const polygon = parsePolygonLike(svgText, POLYGON_TAG_REGEX, true, "polygon", index);
+  const polygon = parsePolygonLike(cleanedSvg, POLYGON_TAG_REGEX, true, "polygon", index);
   paths.push(...polygon.items);
   index = polygon.nextIndex;
 
-  const polyline = parsePolygonLike(svgText, POLYLINE_TAG_REGEX, false, "polyline", index);
+  const polyline = parsePolygonLike(cleanedSvg, POLYLINE_TAG_REGEX, false, "polyline", index);
   paths.push(...polyline.items);
   index = polyline.nextIndex;
 
-  const rects = parseRectangles(svgText, index);
+  const rects = parseRectangles(cleanedSvg, index);
   paths.push(...rects.items);
   index = rects.nextIndex;
 
-  const circles = parseCircles(svgText, index);
+  const circles = parseCircles(cleanedSvg, index);
   paths.push(...circles.items);
   index = circles.nextIndex;
 
-  const ellipses = parseEllipses(svgText, index);
+  const ellipses = parseEllipses(cleanedSvg, index);
   paths.push(...ellipses.items);
   index = ellipses.nextIndex;
 
-  const lines = parseLines(svgText, index);
+  const lines = parseLines(cleanedSvg, index);
   paths.push(...lines.items);
 
   if (paths.length === 0) {
