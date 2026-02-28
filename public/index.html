@@ -1,252 +1,563 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ArcGrid Logo Guide Constructor</title>
-    <style>
-      :root {
-        --bg: #f8f4ec;
-        --panel: #fffaf3;
-        --ink: #17202a;
-        --muted: #5f6b76;
-        --line: #d8c7aa;
-        --accent: #0057ff;
-        --accent-2: #ff6d00;
-      }
 
-      * {
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArcGrid Logo Guide Constructor</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      /* Pale blue-gray background */
+      --panel: #ffffff;
+      /* Clean white panel */
+      --ink: #1a1b1d;
+      /* Very dark blue/gray for text, high contrast but softer than pure black */
+      --muted: #8a8f98;
+      /* Linear-style muted gray/blue */
+      --line: #e2e8f0;
+      /* Subtle borders */
+      --accent: #5e6ad2;
+      /* Linear-like indigo/blue accent */
+      --accent-hover: #4b55c3;
+      --accent-2: #ff6d00;
 
-      body {
-        margin: 0;
-        font-family: "Avenir Next", "Segoe UI", sans-serif;
-        color: var(--ink);
-        background:
-          radial-gradient(circle at 10% 10%, #ffe6bf 0%, transparent 42%),
-          radial-gradient(circle at 90% 30%, #f6d6ff 0%, transparent 30%),
-          linear-gradient(160deg, #f7f2e9 0%, #f0efe9 100%);
-      }
+      --radius: 6px;
+      /* Industrial, precise corners */
+      --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      --font-mono: "SF Mono", "Menlo", "Consolas", monospace;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      /* Slightly smaller default font */
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(1200px, 92vw);
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      /* Slightly narrower sidebar for a sleeker look */
+      gap: 24px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+      /* Subtle, crisp shadow */
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      /* Restrained, industrial header */
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    label span {
+      display: inline-block;
+      color: var(--muted);
+    }
+
+    textarea,
+    input,
+    select,
+    button {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      font-family: var(--font-ui);
+      font-size: 13px;
+      background: #fafafa;
+      /* Very subtle off-white for inputs */
+      color: var(--ink);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    textarea:focus,
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(94, 106, 210, 0.15);
+      /* Focus ring */
+    }
+
+    input[type="color"] {
+      padding: 2px 4px;
+      /* Fix color picker padding */
+      height: 34px;
+      cursor: pointer;
+    }
+
+    textarea.auto-resize {
+      height: 120px;
+      resize: none;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 500;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      padding: 0 16px;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    button.primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    button.secondary {
+      background: #f8f9fc;
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    button.secondary:hover {
+      background: #f1f3f7;
+    }
+
+    button:hover:not(.primary) {
+      background: #f8f9fc;
+      border-color: #d1d5db;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row>* {
+      flex: 1;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stack>label {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .preview {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 700px;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    #signature {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      min-height: 520px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8f9fa;
+      background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+      background-size: 20px 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #svgCanvas {
+      flex: 1;
+      width: 100%;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      padding-top: 60px;
+    }
+
+    .candidate-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--line);
+      border-radius: var(--radius);
+      height: 120px;
+      text-align: center;
+      background: #f8f9fa;
+      transition: all 0.2s ease;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dropzone:hover {
+      border-color: var(--accent);
+      background: rgba(94, 106, 210, 0.02);
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .dropzone-icon {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .candidate-item {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .candidate-item:hover {
+      border-color: #cbd5e1;
+      background: #f8f9fc;
+    }
+
+    .candidate-item.active {
+      border-color: var(--accent);
+      background: rgba(94, 106, 210, 0.05);
+      box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+
+    .foot {
+      margin-top: auto;
+      padding-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+      border-top: 1px solid var(--line);
+    }
+
+    hr {
+      margin: 8px 0;
+      border: none;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Custom checkbox styling for a more industrial feel */
+    input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      position: relative;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 8px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      margin-bottom: 2px;
+    }
+
+    .row>label:has(input[type="checkbox"]) {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    .floating-header {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 10;
+      pointer-events: none;
+      align-items: flex-start;
+    }
+
+    .floating-header>* {
+      pointer-events: auto;
+    }
+
+    .segmented-control {
+      display: flex;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      gap: 2px;
+    }
+
+    .segmented-control label {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: calc(var(--radius) - 2px);
+      transition: all 0.2s ease;
+      color: var(--muted);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 0;
+    }
+
+    .segmented-control label:hover {
+      color: var(--ink);
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .segmented-control input[type="checkbox"],
+    .segmented-control input[type="radio"] {
+      display: none;
+    }
+
+    .segmented-control label:has(input:checked) {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="color"].small-color {
+      padding: 0;
+      width: 22px;
+      height: 22px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    input[type="color"].small-color::-webkit-color-swatch-wrapper {
+      padding: 1px;
+    }
+
+    input[type="color"].small-color::-webkit-color-swatch {
+      border: none;
+      border-radius: 2px;
+    }
+
+    @media (max-width: 980px) {
       .wrap {
-        width: min(1200px, 92vw);
-        margin: 40px auto 60px;
-        display: grid;
-        grid-template-columns: 420px 1fr;
-        gap: 20px;
+        grid-template-columns: 1fr;
       }
+    }
+  </style>
+</head>
 
-      .panel {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 18px;
-        box-shadow: 0 12px 38px rgba(30, 35, 40, 0.08);
-      }
+<body>
+  <div class="wrap">
+    <section class="panel stack">
+      <div>
+        <h1>ArcGrid VI Guide Lab</h1>
+        <p>Auto-generate construction lines for logos and export editable assets.</p>
+      </div>
 
-      h1 {
-        margin: 0 0 4px;
-        font-size: 1.8rem;
-        letter-spacing: 0.02em;
-      }
+      <label class="dropzone">
+        <svg class="dropzone-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <span style="color: var(--ink); font-weight: 500; font-size: 14px; margin-bottom: 4px;">Upload SVG File</span>
+        <span style="font-size: 12px; margin-bottom: 0;">Drag and drop or click to browse</span>
+        <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
+      </label>
 
-      p {
-        margin: 4px 0;
-        color: var(--muted);
-      }
+      <label class="stack">
+        <span>Or paste SVG Code</span>
+        <textarea id="svgInput" class="auto-resize" placeholder="<svg>...</svg>"></textarea>
+      </label>
 
-      textarea,
-      input,
-      select,
-      button {
-        width: 100%;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        padding: 10px 12px;
-        font: inherit;
-        background: #fff;
-      }
+      <!-- 暂时隐藏 Strategy 下拉框，保留功能 -->
+      <label class="stack" style="display: none;">
+        <span>Strategy</span>
+        <select id="strategy">
+          <option value="auto">auto</option>
+          <option value="circleFirst">circleFirst</option>
+          <option value="gridFirst">gridFirst</option>
+        </select>
+      </label>
 
-      textarea {
-        min-height: 140px;
-        resize: vertical;
-        font-family: "SF Mono", "Menlo", monospace;
-        font-size: 13px;
-      }
+      <button class="primary" id="analyzeBtn">Analyze SVG</button>
 
-      button {
-        cursor: pointer;
-        font-weight: 600;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
+      <hr style="border: none; border-top: 1px solid var(--line); margin-top: 16px;" />
 
-      button.primary {
-        background: var(--accent);
-        color: #fff;
-        border-color: var(--accent);
-      }
+      <div style="margin-bottom: 8px;">
+        <h2 style="margin: 0 0 4px; font-size: 14px; font-weight: 600;">Phase-2: Image to Vector</h2>
+        <p style="font-size: 12px; color: var(--muted); margin: 0;">Requires Nana Banana API configured in environment
+        </p>
+      </div>
 
-      button.secondary {
-        background: #fff3e5;
-        border-color: #ffd2ab;
-      }
+      <label class="dropzone">
+        <svg class="dropzone-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span style="color: var(--ink); font-weight: 500; font-size: 14px; margin-bottom: 4px;">Upload Image</span>
+        <span style="font-size: 12px; margin-bottom: 0;">Drag and drop or click to browse</span>
+        <input id="imageFile" type="file" accept="image/*" />
+      </label>
 
-      button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
-      }
+      <button class="secondary" id="vectorizeBtn">Vectorize Image + Analyze</button>
 
-      .row {
-        display: flex;
-        gap: 8px;
-      }
+      <p id="status" class="foot" style="margin-top: 24px;">Ready.</p>
+    </section>
 
-      .row > * {
-        flex: 1;
-      }
-
-      .stack {
-        display: grid;
-        gap: 10px;
-      }
-
-      .preview {
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        min-height: 700px;
-      }
-
-      .meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      #signature {
-        color: var(--accent-2);
-        font-weight: 700;
-      }
-
-      #svgCanvas {
-        width: 100%;
-        height: 100%;
-        min-height: 520px;
-        border: 1px dashed var(--line);
-        border-radius: 12px;
-        background: #fff;
-        overflow: auto;
-        display: grid;
-        place-items: center;
-      }
-
-      .candidate-list {
-        display: grid;
-        gap: 8px;
-      }
-
-      .candidate-item {
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 8px;
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-      }
-
-      .candidate-item.active {
-        border-color: var(--accent);
-        background: #edf3ff;
-      }
-
-      .foot {
-        margin-top: 10px;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      @media (max-width: 980px) {
-        .wrap {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <section class="panel stack">
-        <div>
-          <h1>ArcGrid VI Guide Lab</h1>
-          <p>Auto-generate construction lines for logos and export editable assets.</p>
-        </div>
-
-        <label class="stack">
-          <span>SVG Input</span>
-          <textarea id="svgInput" placeholder="Paste SVG here"></textarea>
-        </label>
-
-        <div class="row">
-          <label class="stack">
-            <span>SVG File Upload</span>
-            <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
-          </label>
-          <label class="stack">
-            <span>Strategy</span>
-            <select id="strategy">
-              <option value="auto">auto</option>
-              <option value="circleFirst">circleFirst</option>
-              <option value="gridFirst">gridFirst</option>
-            </select>
-          </label>
-        </div>
-
-        <button class="primary" id="analyzeBtn">Analyze SVG</button>
-
-        <hr style="border: none; border-top: 1px solid var(--line)" />
-
-        <label class="stack">
-          <span>Image URL (phase-2: vectorize -> analyze)</span>
-          <input id="imageUrl" placeholder="https://example.com/logo.png" />
-        </label>
-
-        <label class="stack">
-          <span>Image Upload (base64)</span>
-          <input id="imageFile" type="file" accept="image/*" />
-        </label>
-
-        <button class="secondary" id="vectorizeBtn">Vectorize Image + Analyze</button>
-
-        <div class="row">
-          <button id="exportSvgBtn">Export SVG</button>
-          <button id="exportPdfBtn">Export PDF</button>
-        </div>
-
-        <p id="status" class="foot">Ready.</p>
-      </section>
-
-      <section class="panel preview">
-        <div class="meta">
+    <section class="panel preview"
+      style="position: relative; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+      <div class="meta"
+        style="padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
           <strong>Preview</strong>
-          <span id="signature">Signature: -</span>
+          <span id="signature" style="color: var(--muted); font-size: 13px; font-family: var(--font-mono);">Signature:
+            -</span>
+        </div>
+        <div class="row" style="margin-bottom: 0;">
+          <button class="secondary" id="exportSvgBtn"
+            style="height: 32px; font-size: 12px; padding: 0 12px; white-space: nowrap;">Export SVG</button>
+          <button class="secondary" id="exportPdfBtn"
+            style="height: 32px; font-size: 12px; padding: 0 12px; white-space: nowrap;">Export PDF</button>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper"
+        style="border: none; border-radius: 0 0 var(--radius) var(--radius); flex: 1; min-height: 600px;">
+        <div class="floating-header">
+          <div class="segmented-control">
+            <label><input id="toggleLogo" type="checkbox" checked /> logo</label>
+            <label><input id="toggleGuides" type="checkbox" checked /> guides</label>
+            <label><input id="toggleAnnotations" type="checkbox" checked /> annotations</label>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <div id="candidateList" class="segmented-control" style="display: none;">
+              <!-- Candidates will be rendered here as radio buttons -->
+            </div>
+            <div id="controlsWrapper" class="segmented-control"
+              style="display: none; padding: 6px 12px; gap: 16px; align-items: center; color: var(--muted); font-size: 13px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>Curve</span>
+                <input type="color" id="circleColor" class="small-color" value="#0057ff" title="Curve Color" />
+                <input type="number" id="circleWeight" value="0.15" step="0.05" min="0.05"
+                  style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Curve Weight" />
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>Line</span>
+                <input type="color" id="lineColor" class="small-color" value="#ff6d00" title="Line Color" />
+                <input type="number" id="lineWeight" value="0.15" step="0.05" min="0.05"
+                  style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Line Weight" />
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="svgCanvas">
           <span style="color: #98a2ad">No analysis yet.</span>
         </div>
+      </div>
+    </section>
+  </div>
 
-        <div class="stack">
-          <div class="row">
-            <label><input id="toggleLogo" type="checkbox" checked /> logo</label>
-            <label><input id="toggleGuides" type="checkbox" checked /> guides</label>
-            <label><input id="toggleAnnotations" type="checkbox" checked /> annotations</label>
-          </div>
-          <div id="candidateList" class="candidate-list"></div>
-        </div>
-      </section>
-    </div>
+  <script type="module" src="/app.js"></script>
+</body>
 
-    <script type="module" src="/app.js"></script>
-  </body>
 </html>

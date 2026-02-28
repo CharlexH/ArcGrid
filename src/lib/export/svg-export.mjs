@@ -9,7 +9,7 @@ function svgEscape(value) {
     .replace(/'/g, "&#39;");
 }
 
-export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "annotations"] }) {
+export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "annotations"], styleConfig = {} }) {
   const { input, bestSolution } = analysis;
   const { bbox } = input;
 
@@ -21,20 +21,29 @@ export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "a
   const padX = bbox.width * 0.2;
   const padY = bbox.height * 0.2;
 
+  let originalContent = "";
+  if (input.raw) {
+    const match = input.raw.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+    if (match) originalContent = match[1];
+  }
+
   if (includeLayers.includes("logo")) {
-    const paths = input.paths
-      .map((path) => `<path d="${svgEscape(path.d)}" fill="none" stroke="#111" stroke-width="${swL}"/>`)
-      .join("\n");
-    layers.push(`<g id="logo-layer">${paths}</g>`);
+    layers.push(`<g id="logo-layer" opacity="0.6">${originalContent}</g>`);
   }
 
   if (includeLayers.includes("guides")) {
+    const opts = styleConfig || {};
+    const lineColorStr = opts.lineColor || "#ff6d00";
+    const circleColorStr = opts.circleColor || "#0057ff";
+    const lineWeightMult = typeof opts.lineWeightMult === "number" ? opts.lineWeightMult : 2;
+    const circleWeightMult = typeof opts.circleWeightMult === "number" ? opts.circleWeightMult : 2;
+
     const circles = bestSolution.circles
-      .map((circle) => `<circle cx="${circle.cx}" cy="${circle.cy}" r="${circle.r}" fill="none" stroke="#1f5bff" stroke-width="${swG * 2}" stroke-dasharray="${swG * 6} ${swG * 4}" data-role="${circle.role}"/>`)
+      .map((circle) => `<circle cx="${circle.cx}" cy="${circle.cy}" r="${circle.r}" fill="none" stroke="${circleColorStr}" stroke-width="${swG * circleWeightMult}" stroke-dasharray="${swG * circleWeightMult * 3} ${swG * circleWeightMult * 2}" data-role="${circle.role}"/>`)
       .join("\n");
 
     const lines = bestSolution.lines
-      .map((line) => `<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" stroke="#ff5b1f" stroke-width="${swG * 1.5}" stroke-dasharray="${swG * 4} ${swG * 4}" data-role="${line.role}"/>`)
+      .map((line) => `<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" stroke="${lineColorStr}" stroke-width="${swG * lineWeightMult}" stroke-dasharray="${swG * lineWeightMult * 2} ${swG * lineWeightMult * 2}" data-role="${line.role}"/>`)
       .join("\n");
 
     layers.push(`<g id="guides-layer">${circles}${lines}</g>`);

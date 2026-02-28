@@ -4,7 +4,7 @@ function pdfEscape(text) {
   return String(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
-export function buildExportPdf({ analysis }) {
+export function buildExportPdf({ analysis, includeLayers = [], styleConfig = {} }) {
   const lines = [
     "%PDF-1.4",
     "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",

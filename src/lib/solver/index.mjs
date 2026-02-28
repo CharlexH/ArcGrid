@@ -71,6 +71,7 @@ export function analyzeLogo({ svgText, strategy = "auto", constraints = {} }) {
       mockId: parsed.mockId,
       paths: parsed.paths,
       bbox: normalized.bbox,
+      raw: parsed.raw,
     },
     constraintGraph: buildConstraintGraph(solved),
     bestSolution,

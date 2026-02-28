@@ -172,7 +172,7 @@ async function handleApi(req, res) {
       : ["logo", "guides", "annotations"];
 
     if (body.format === "svg") {
-      const svgText = buildExportSvg({ analysis, includeLayers });
+      const svgText = buildExportSvg({ analysis, includeLayers, styleConfig: body.styleConfig });
       return json(res, 200, {
         mimeType: "image/svg+xml",
         fileName: `guidepack-${analysis.analysisId}.svg`,
@@ -181,7 +181,7 @@ async function handleApi(req, res) {
     }
 
     if (body.format === "pdf") {
-      const pdfBuffer = buildExportPdf({ analysis, includeLayers });
+      const pdfBuffer = buildExportPdf({ analysis, includeLayers, styleConfig: body.styleConfig });
       return json(res, 200, {
         mimeType: "application/pdf",
         fileName: `guidepack-${analysis.analysisId}.pdf`,

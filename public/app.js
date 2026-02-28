@@ -6,7 +6,8 @@ const state = {
 
 const svgInput = document.querySelector("#svgInput");
 const svgFile = document.querySelector("#svgFile");
-const imageUrlInput = document.querySelector("#imageUrl");
+const controlsWrapper = document.querySelector("#controlsWrapper");
+
 const imageFileInput = document.querySelector("#imageFile");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const vectorizeBtn = document.querySelector("#vectorizeBtn");
@@ -21,7 +22,7 @@ const toggleLogo = document.querySelector("#toggleLogo");
 const toggleGuides = document.querySelector("#toggleGuides");
 const toggleAnnotations = document.querySelector("#toggleAnnotations");
 
-const MOCK_FALLBACK_SVG = `<svg id="MOCK_LOGO_ARCGRID_V1" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#111" stroke-width="20"><path d="M96 384 L96 128 L256 128 L416 384 Z" /><path d="M176 300 L256 172 L336 300 Z" /></g></svg>`;
+const MOCK_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 64 64"><path fill="#89664c" d="m52.2 7.9l2.5 2.6L60 7c2.2-.3 3.2-5-2.8-3.5c-1.5.4-3.8 1.5-5 4.4"/><path fill="#594640" d="M61.1 7c1.8-.7.5-2.8.5-2.8s.4 1.5-2.4 1.9c-4.1.6-5.2 3.6-5.2 3.6l.7.7s2.4-1.8 6.4-3.4"/><path fill="#699635" d="M53.5 6c8.8 9.3 1.2 23.3-7.6 39.5c-.7 1.4-1.5 2.7-2.2 4.1C37.5 61.1 28.4 62.3 23.5 62c-5.5-.4-11-3-14.7-6.9c-3.8-4-6.3-9.8-6.7-15.7c-.4-5.2.5-15.1 11.1-22c1.2-.8 2.5-1.6 3.7-2.4C31.8 5.2 44.7-3.3 53.5 6"/><g fill="#c7e755"><path d="M15 19.9C29.5 10.5 44.3-.5 52 7.7c7.7 8.1-7.5 18.6-16 34.5C27.5 58 17.1 60.7 10.2 53.5C3.4 46.2.4 29.4 15 19.9"/><path d="M11.8 51.8c1.6 1.6 3.3 2.5 5.3 2.6c5.5.4 11.6-4.8 16.7-14.2c2.9-5.5 6.6-10.3 9.9-14.6c5.2-6.7 10-13.1 6.9-16.4c-5.3-5.6-19 3.4-30 10.7c-1.2.8-2.5 1.6-3.7 2.4c-9.1 5.9-9.9 14-9.6 18.3c.3 4.4 2 8.6 4.5 11.2"/></g><path fill="#ffce31" d="M11.8 51.8c1.6 1.6 3.3 2.5 5.3 2.6c5.5.4 11.6-4.8 16.7-14.2c2.9-5.5 6.6-10.3 9.9-14.6c5.2-6.7 10-13.1 6.9-16.4c-5.3-5.6-19 3.4-30 10.7c-1.2.8-2.5 1.6-3.7 2.4c-9.1 5.9-9.9 14-9.6 18.3c.3 4.4 2 8.6 4.5 11.2" opacity=".33"/><path fill="#89664c" d="M17.2 27c6-6.6 14.8-6 16.6-2S33 35 29 39.4c-4.1 4.4-9.6 7.3-13.3 5.5c-3.8-1.8-4.5-11.3 1.5-17.9"/><path fill="#d3976e" d="M16.5 33.6c2.6-3.8 5.3-4.8 4.8-3.9c-.4.9-1.8 3.1-2.6 5.1c-.9 2-1.4 3.7-2.4 4.3c-1 .8-2.3-1.4.2-5.5"/><path fill="#594640" d="M26.4 36.7c-3.5 3.7-7.7 6.6-11.7 7.5c.3.3.6.6 1 .7c3.8 1.9 9.2-1 13.3-5.5C33 35 35.6 29 33.8 25c-.2-.4-.4-.7-.7-1c-.7 4.2-3.3 8.9-6.7 12.7"/></svg>`;
 
 function setStatus(text) {
   statusEl.textContent = text;
@@ -47,6 +48,7 @@ function renderPreview() {
   if (!state.analysis) {
     svgCanvas.innerHTML = `<span style="color: #98a2ad">No analysis yet.</span>`;
     candidateList.innerHTML = "";
+    candidateList.style.display = "none";
     signatureEl.textContent = "Signature: -";
     return;
   }
@@ -59,17 +61,31 @@ function renderPreview() {
   const swG = bbox.width * 0.002;
   const fwA = bbox.width * 0.03;
 
+  let originalContent = "";
+  if (state.analysis.input.raw) {
+    const rawSvg = state.analysis.input.raw;
+    const match = rawSvg.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+    if (match) {
+      originalContent = match[1];
+    }
+  }
+
   const logoLayer = layerSet.has("logo")
-    ? state.analysis.input.paths
-      .map((path) => `<path d="${path.d}" fill="none" stroke="#111" stroke-width="${swL}"/>`)
-      .join("\n")
+    ? `<g opacity="0.6">${originalContent}</g>`
     : "";
+
+  const lineColorStr = document.querySelector("#lineColor")?.value || "#ff6d00";
+  const circleColorStr = document.querySelector("#circleColor")?.value || "#0057ff";
+
+  // Weights act as multipliers against the responsive base size swG
+  const lineWeightMult = parseFloat(document.querySelector("#lineWeight")?.value || "0.15") * 10;
+  const circleWeightMult = parseFloat(document.querySelector("#circleWeight")?.value || "0.15") * 10;
 
   const guideCircles = layerSet.has("guides")
     ? candidate.circles
       .map(
         (circle) =>
-          `<circle cx="${circle.cx}" cy="${circle.cy}" r="${circle.r}" fill="none" stroke="#0057ff" stroke-width="${swG * 2}" stroke-dasharray="${swG * 6} ${swG * 4}"/>`,
+          `<circle cx="${circle.cx}" cy="${circle.cy}" r="${circle.r}" fill="none" stroke="${circleColorStr}" stroke-width="${swG * circleWeightMult}" stroke-dasharray="${swG * circleWeightMult * 3} ${swG * circleWeightMult * 2}"/>`,
       )
       .join("\n")
     : "";
@@ -78,7 +94,7 @@ function renderPreview() {
     ? candidate.lines
       .map(
         (line) =>
-          `<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" stroke="#ff6d00" stroke-width="${swG * 1.5}" stroke-dasharray="${swG * 4} ${swG * 4}"/>`,
+          `<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" stroke="${lineColorStr}" stroke-width="${swG * lineWeightMult}" stroke-dasharray="${swG * lineWeightMult * 2} ${swG * lineWeightMult * 2}"/>`,
       )
       .join("\n")
     : "";
@@ -93,19 +109,32 @@ function renderPreview() {
 
   signatureEl.textContent = `Signature: ${state.analysis.signature}`;
 
-  candidateList.innerHTML = state.analysis.candidates
-    .map((candidate) => {
-      const active = candidate.id === state.selectedCandidateId ? "active" : "";
-      return `<button class="candidate-item ${active}" data-candidate-id="${candidate.id}"><span>${candidate.label}</span><span>score ${candidate.metrics.finalScore}</span></button>`;
-    })
-    .join("");
+  if (state.analysis.candidates && state.analysis.candidates.length > 0) {
+    candidateList.style.display = "flex";
+    candidateList.innerHTML = state.analysis.candidates
+      .map((candidate) => {
+        let shortLabel = candidate.label;
+        if (shortLabel.includes("Full")) shortLabel = "Full";
+        else if (shortLabel.includes("Circles")) shortLabel = "Curves";
+        else if (shortLabel.includes("Lines")) shortLabel = "Lines";
 
-  candidateList.querySelectorAll("button[data-candidate-id]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.selectedCandidateId = button.dataset.candidateId;
-      renderPreview();
+        const checked = candidate.id === state.selectedCandidateId ? "checked" : "";
+        return `<label><input type="radio" name="candidate" value="${candidate.id}" ${checked} />${shortLabel} (${candidate.metrics.finalScore})</label>`;
+      })
+      .join("");
+
+    candidateList.querySelectorAll("input[type='radio']").forEach((radio) => {
+      radio.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          state.selectedCandidateId = e.target.value;
+          renderPreview();
+        }
+      });
     });
-  });
+  } else {
+    candidateList.style.display = "none";
+    candidateList.innerHTML = "";
+  }
 }
 
 async function analyzeSvg(svgText) {
@@ -130,6 +159,7 @@ async function analyzeSvg(svgText) {
   state.analysis = data;
   state.selectedCandidateId = data.bestSolution.id;
   setStatus(`Analyzed. bestScore=${data.bestSolution.metrics.finalScore}`);
+  if (controlsWrapper) controlsWrapper.style.display = "flex";
   renderPreview();
 }
 
@@ -180,7 +210,6 @@ vectorizeBtn.addEventListener("click", async () => {
       body: JSON.stringify({
         provider: "nanabanana2",
         imageBase64: state.imageBase64,
-        imageUrl: imageUrlInput.value.trim() || undefined,
       }),
     });
 
@@ -222,6 +251,12 @@ async function exportResult(format) {
       analysisId: state.analysis.analysisId,
       format,
       includeLayers: selectedLayers(),
+      styleConfig: {
+        lineColor: document.querySelector("#lineColor")?.value || "#ff6d00",
+        circleColor: document.querySelector("#circleColor")?.value || "#0057ff",
+        lineWeightMult: parseFloat(document.querySelector("#lineWeight")?.value || "0.15") * 10,
+        circleWeightMult: parseFloat(document.querySelector("#circleWeight")?.value || "0.15") * 10,
+      }
     }),
   });
 
@@ -260,5 +295,9 @@ exportPdfBtn.addEventListener("click", async () => {
   checkbox.addEventListener("change", renderPreview);
 });
 
+[document.querySelector("#lineColor"), document.querySelector("#circleColor"), document.querySelector("#lineWeight"), document.querySelector("#circleWeight")].forEach((input) => {
+  input?.addEventListener("input", renderPreview);
+});
+
 svgInput.value = MOCK_FALLBACK_SVG;
-setStatus("Loaded built-in mock SVG. Click Analyze SVG to start.");
+setStatus("© 2024 Charlex");
