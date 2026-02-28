@@ -7,7 +7,9 @@ const i18n = {
     pasteSvg: "Or paste SVG Code",
     analyzeBtn: "Analyze SVG",
     phase2Title: "Experimental Features",
-    phase2Desc: "Requires Nana Banana API",
+    phase2Desc: "Requires Gemini API Key",
+    apiKeyLabel: "API Key",
+    apiKeyMissing: "Please enter your Gemini API Key first.",
     uploadImg: "Upload Image",
     vectorizeBtn: "Vectorize Image + Analyze",
     previewTitle: "Preview",
@@ -37,6 +39,7 @@ const i18n = {
     cFull: "Full",
     cCurves: "Curves",
     cLines: "Lines",
+    operationSuccess: "Operation Successful",
     copyright: "© 2024 Charlex"
   },
   zh: {
@@ -47,7 +50,9 @@ const i18n = {
     pasteSvg: "或粘贴 SVG 代码",
     analyzeBtn: "分析 SVG",
     phase2Title: "实验功能",
-    phase2Desc: "需要配置 Nana Banana API",
+    phase2Desc: "需要 Gemini API Key",
+    apiKeyLabel: "API Key",
+    apiKeyMissing: "请先输入 Gemini API Key。",
     uploadImg: "上传图片",
     vectorizeBtn: "矢量化图片并分析",
     previewTitle: "预览",
@@ -77,6 +82,7 @@ const i18n = {
     cFull: "全部",
     cCurves: "曲线",
     cLines: "直线",
+    operationSuccess: "操作成功",
     copyright: "© 2024 Charlex"
   }
 };
@@ -105,6 +111,80 @@ const controlsWrapper = document.querySelector("#controlsWrapper");
 const imageFileInput = document.querySelector("#imageFile");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const vectorizeBtn = document.querySelector("#vectorizeBtn");
+const geminiApiKeyInput = document.querySelector("#geminiApiKey");
+
+// Restore API key from localStorage
+if (geminiApiKeyInput) {
+  const savedKey = localStorage.getItem("arcgrid_gemini_api_key");
+  if (savedKey) geminiApiKeyInput.value = savedKey;
+  geminiApiKeyInput.addEventListener("input", () => {
+    localStorage.setItem("arcgrid_gemini_api_key", geminiApiKeyInput.value.trim());
+  });
+}
+
+// --- Client-side Gemini vectorization ---
+const SYSTEM_PROMPT_VECTORIZE = `
+You are an expert graphic designer and SVG coder.
+Your task is to analyze the provided logo image and convert it into a clean, precise, and well-structured SVG format.
+Output ONLY valid SVG code.
+Do not include markdown formatting or any other text (like \`\`\`svg).
+The SVG must be strictly geometric, using paths and basic shapes.
+Use a clean viewBox (e.g., "0 0 512 512" or similar based on the image proportions).
+`;
+
+async function geminiVectorize(apiKey, imageBase64, mimeType) {
+  const modelName = "gemini-3.1-flash-image-preview";
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const payload = {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT_VECTORIZE }] },
+    contents: [{
+      parts: [
+        { text: "Convert this logo to a clean SVG following the instructions." },
+        { inlineData: { mimeType: mimeType || "image/jpeg", data: imageBase64 } }
+      ]
+    }]
+  };
+
+  let response;
+  const maxRetries = 3;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) break;
+
+    if (response.status === 429 && attempt < maxRetries) continue;
+
+    if (response.status === 429) throw new Error("RATE_LIMIT");
+    throw new Error(`Gemini API failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+
+  let textOutput = null;
+  for (const part of parts) {
+    if (part.text && !part.thought) textOutput = part.text;
+  }
+
+  if (!textOutput) throw new Error("Gemini response missing text output.");
+
+  let svgText = textOutput.trim();
+  const svgMatch = svgText.match(/<svg[\s\S]*<\/svg>/i);
+  if (svgMatch) svgText = svgMatch[0];
+
+  return svgText;
+}
 const exportSvgBtn = document.querySelector("#exportSvgBtn");
 const signatureEl = document.querySelector("#signature");
 const statusEl = document.querySelector("#status");
@@ -422,35 +502,48 @@ imageFileInput.addEventListener("change", async (event) => {
 });
 
 vectorizeBtn.addEventListener("click", async () => {
+  const originalText = vectorizeBtn.textContent;
   try {
-    setStatus(t('submitting'));
-    const createResp = await fetch("/api/v1/vectorize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        provider: "nanabanana2",
-        imageBase64: state.imageBase64,
-        mimeType: state.imageMimeType,
-      }),
-    });
-
-    const job = await createResp.json();
-    if (!createResp.ok || job.status !== "done") {
-      if (job.errorCode === "RATE_LIMIT" || job.status === 429) {
-        throw new Error("RATE_LIMIT");
-      }
-      throw new Error(job.errorMessage || t('vectorizationFailed'));
+    const apiKey = geminiApiKeyInput?.value?.trim();
+    if (!apiKey) {
+      setStatus(t('apiKeyMissing'));
+      geminiApiKeyInput?.focus();
+      return;
+    }
+    if (!state.imageBase64) {
+      setStatus(t('vectorizationFailed'));
+      return;
     }
 
-    svgInput.value = job.svgText;
-    await analyzeSvg(job.svgText);
-    setStatus(t('vectorized', job.providerMode));
+    vectorizeBtn.disabled = true;
+    vectorizeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    setStatus(t('submitting'));
+    vectorizeBtn.textContent = t('submitting');
+    const svgText = await geminiVectorize(apiKey, state.imageBase64, state.imageMimeType);
+
+    svgInput.value = svgText;
+
+    vectorizeBtn.textContent = t('analyzing');
+    await analyzeSvg(svgText);
+
+    setStatus(t('vectorized', 'live'));
+    vectorizeBtn.textContent = t('operationSuccess');
+
+    setTimeout(() => {
+      vectorizeBtn.disabled = false;
+      vectorizeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      vectorizeBtn.textContent = originalText;
+    }, 1000);
   } catch (error) {
-    if (error.message.includes("RATE_LIMIT") || error.message.includes("429")) {
+    if (error?.message?.includes("RATE_LIMIT") || error?.message?.includes("429")) {
       setStatus(t('vectorizationRateLimit'));
     } else {
       setStatus(error.message);
     }
+    vectorizeBtn.disabled = false;
+    vectorizeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    vectorizeBtn.textContent = originalText;
   }
 });
 

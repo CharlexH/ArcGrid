@@ -54,7 +54,7 @@
 
       <div class="border border-blue-200 bg-blue-50 p-4 rounded-lg flex flex-col gap-4">
         <div>
-          <h2 class="mb-1 text-[14px] font-semibold flex items-center gap-1.5">
+          <h2 class="mb-2 text-[14px] font-semibold flex items-center gap-1.5">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
               class="flex-shrink-0 text-[var(--color-accent)]">
               <path fill-rule="evenodd" clip-rule="evenodd"
@@ -72,8 +72,13 @@
             </svg>
             <span data-i18n="phase2Title">Experimental Features</span>
           </h2>
-          <p class="text-[12px] text-[var(--color-muted)]" data-i18n="phase2Desc">Requires Nana Banana API
-            configured in environment</p>
+          <div class="flex items-center gap-1">
+            <p class="text-[12px] text-[var(--color-muted)] whitespace-nowrap" data-i18n="phase2Desc">Requires Gemini
+              API Key</p>
+            <input id="geminiApiKey" type="password"
+              class="flex-1 h-6 min-w-0 rounded-lg border border-blue-200 bg-white/60 px-2 py-1 text-[12px] font-mono outline-none transition-all duration-200 focus:border-[var(--color-accent)] focus:ring focus:ring-[rgba(94,106,210,0.15)]"
+              placeholder="AIza..." />
+          </div>
         </div>
 
         <label

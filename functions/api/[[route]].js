@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { handle } from "hono/cloudflare-pages";
 import { analyzeLogo } from "../../src/lib/solver/index.mjs";
-import { vectorizeInput } from "../../src/lib/vectorize/provider.mjs";
 import { buildExportSvg } from "../../src/lib/export/svg-export.mjs";
 import { buildExportPdf } from "../../src/lib/export/pdf-export.mjs";
 
@@ -11,45 +10,7 @@ app.get("/health", (c) => {
     return c.json({ ok: true, now: new Date().toISOString() });
 });
 
-app.post("/v1/vectorize", async (c) => {
-    try {
-        const body = await c.req.json();
 
-        // Inject the GEMINI_API_KEY from Cloudflare env bindings if available
-        if (c.env?.GEMINI_API_KEY) {
-            process.env.GEMINI_API_KEY = c.env.GEMINI_API_KEY;
-        }
-        if (c.env?.GEMINI_MODEL) {
-            process.env.GEMINI_MODEL = c.env.GEMINI_MODEL;
-        }
-
-        const { provider, imageBase64, imageUrl, mimeType, options } = body;
-
-        // We now await the result synchronously and return it immediately.
-        // Cloudflare Pages Functions allows long-running requests (up to limits, typically 30s+ for paid, sometimes less on free).
-        // The Gemini vectorization usually takes 5-15s.
-        const result = await vectorizeInput({
-            provider,
-            imageBase64,
-            imageUrl,
-            mimeType,
-            options,
-        });
-
-        return c.json({
-            status: "done",
-            svgText: result.svgText,
-            provider: result.provider,
-            providerMode: result.mode,
-        });
-    } catch (error) {
-        const status = error.status || error.statusCode || 500;
-        return c.json({
-            errorCode: error.errorCode || "VECTORIZATION_FAILED",
-            errorMessage: error.errorMessage || error.message,
-        }, status);
-    }
-});
 
 app.post("/v1/logo/analyze", async (c) => {
     try {

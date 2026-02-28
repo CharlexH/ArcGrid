@@ -5,7 +5,6 @@
  */
 import { Hono } from "hono";
 import { analyzeLogo } from "../src/lib/solver/index.mjs";
-import { vectorizeInput } from "../src/lib/vectorize/provider.mjs";
 import { buildExportSvg } from "../src/lib/export/svg-export.mjs";
 import { buildExportPdf } from "../src/lib/export/pdf-export.mjs";
 
@@ -16,36 +15,6 @@ export function createTestApp() {
         return c.json({ ok: true, now: new Date().toISOString() });
     });
 
-    app.post("/v1/vectorize", async (c) => {
-        try {
-            const body = await c.req.json();
-            const { provider, imageBase64, imageUrl, mimeType, options } = body;
-
-            const result = await vectorizeInput({
-                provider,
-                imageBase64,
-                imageUrl,
-                mimeType,
-                options,
-            });
-
-            return c.json({
-                status: "done",
-                svgText: result.svgText,
-                provider: result.provider,
-                providerMode: result.mode,
-            });
-        } catch (error) {
-            const status = error.status || error.statusCode || 500;
-            return c.json(
-                {
-                    errorCode: error.errorCode || "VECTORIZATION_FAILED",
-                    errorMessage: error.errorMessage || error.message,
-                },
-                status,
-            );
-        }
-    });
 
     app.post("/v1/logo/analyze", async (c) => {
         try {

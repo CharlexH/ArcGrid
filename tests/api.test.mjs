@@ -67,24 +67,6 @@ async function testAnalyzeAndExport(baseUrl) {
   assert.equal(pdfRaw.includes("layer=guides"), true);
 }
 
-async function testVectorize(baseUrl) {
-  // Stateless: single POST returns result immediately (no polling)
-  const resp = await fetch(`${baseUrl}/api/v1/vectorize`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      provider: "mock",
-      imageBase64: "ZmFrZS1pbWFnZS1ieXRlcw==",
-    }),
-  });
-
-  const result = await resp.json();
-  assert.equal(resp.status, 200);
-  assert.equal(result.status, "done");
-  assert.equal(result.provider, "mock");
-  assert.equal(typeof result.svgText, "string");
-  assert.equal(result.svgText.includes("MOCK_LOGO_ARCGRID_V1"), true);
-}
 
 async function testInvalidSvg(baseUrl) {
   const response = await fetch(`${baseUrl}/api/v1/logo/analyze`, {
@@ -101,7 +83,6 @@ export async function runApiTests() {
   await withServer(async ({ baseUrl }) => {
     await testHealth(baseUrl);
     await testAnalyzeAndExport(baseUrl);
-    await testVectorize(baseUrl);
     await testInvalidSvg(baseUrl);
   });
 }
