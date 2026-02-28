@@ -1,12 +1,16 @@
-# ArcGrid VI Guide Lab 📐
+# ArcGrid Guide Lab 📐
 
 [English](#english) | [中文](#中文)
 
 ---
 
+![ArcGrid Preview](public/arcgrid_preview.webp)
+
 ## English
 
-**ArcGrid** is a specialized web application prototype designed for generating VI (Visual Identity) manual-style logo construction guides. It automates the process of creating professional construction lines and geometric annotations for logo designs.
+**ArcGrid** is a specialized web application prototype designed for generating manual-style logo construction guides. It automates the process of creating professional construction lines and geometric annotations for logo designs.
+
+**✨ Live Demo:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
 
 ### ✨ Key Features
 
@@ -52,14 +56,9 @@ npm run dev
 
 The application will be available at `http://localhost:8788`.
 
-### ⚙️ Environment Configuration
+### ⚙️ API Configuration
 
-Copy `.env.example` to `.env` and fill in the required fields:
-
-```env
-GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-3.1-flash-preview
-```
+No environment variables are required. You can directly input your **Gemini API Key** within the settings panel on the webpage. The AI model is pre-configured to use **gemini-3.1-flash-image-preview**. Your API key will be securely saved in your browser's local storage.
 
 *Note: The Gemini API is required for the experimental image-to-svg vectorization feature.*
 
@@ -71,9 +70,13 @@ GEMINI_MODEL=gemini-3.1-flash-preview
 
 ---
 
+![ArcGrid Preview](public/arcgrid_preview.webp)
+
 ## 中文
 
-**ArcGrid** 是一个用于生成 VI（视觉识别系统）手册风格 Logo 比例绘图和辅助线的原型应用。它能够自动为 Logo 设计生成专业的辅助线、几何标注和制图规范。
+**ArcGrid** 是一个用于生成图标比例绘图和辅助线的原型应用。它能够自动为图标设计生成专业的辅助线、几何标注和制图规范。
+
+**✨ 在线体验:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
 
 ### ✨ 核心功能
 
@@ -119,14 +122,9 @@ npm run dev
 
 访问 `http://localhost:8788` 即可开始使用。
 
-### ⚙️ 环境配置
+### ⚙️ API 配置
 
-将 `.env.example` 复制为 `.env` 并填写相关信息：
-
-```env
-GEMINI_API_KEY=你的API密钥
-GEMINI_MODEL=gemini-3.1-flash-preview
-```
+无需配置环境变量。您可以直接在网页的设置面板中输入您的 **Gemini API Key**，AI 模型已预选为 **gemini-3.1-flash-image-preview**。您的 API Key 将被被安全地保存在浏览器的本地存储 (Local Storage) 中。
 
 *注意：Gemini API 仅在使用实验性的“图像转 SVG”功能时需要。*
 
