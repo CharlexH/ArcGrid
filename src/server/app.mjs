@@ -2,6 +2,9 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 import { ApiFailure } from "../lib/errors.mjs";
 import { analyzeLogo } from "../lib/solver/index.mjs";

@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ArcGrid Logo Guide Constructor</title>
+  <link rel="icon" type="image/png" href="/logo.png">
   <style>
     :root {
       --bg: #f5f7fa;
@@ -45,7 +46,7 @@
     }
 
     .wrap {
-      width: min(1200px, 92vw);
+      width: min(1200px, calc(100% - 48px));
       margin: 24px auto;
       display: grid;
       grid-template-columns: 380px 1fr;
@@ -121,7 +122,7 @@
     }
 
     textarea.auto-resize {
-      height: 120px;
+      height: 80px;
       resize: none;
       overflow-y: auto;
       font-family: var(--font-mono);
@@ -244,11 +245,11 @@
     }
 
     .dropzone {
-      border: 2px dashed var(--line);
+      border: 1px dashed var(--line);
       border-radius: var(--radius);
-      height: 120px;
+      height: 100px;
       text-align: center;
-      background: #f8f9fa;
+      background: #F9FBFF;
       transition: all 0.2s ease;
       position: relative;
       cursor: pointer;
@@ -271,9 +272,9 @@
     }
 
     .dropzone-icon {
-      width: 32px;
-      height: 32px;
-      margin-bottom: 12px;
+      width: 24px;
+      height: 24px;
+      margin-bottom: 8px;
       color: var(--accent);
     }
 
@@ -416,6 +417,69 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
+    .lang-switcher {
+      display: flex;
+      background: #f8f9fa;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .lang-switcher label {
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: calc(var(--radius) - 2px);
+      color: var(--muted);
+      user-select: none;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      margin: 0;
+    }
+
+    .lang-switcher input[type="radio"] {
+      display: none;
+    }
+
+    .lang-switcher label:has(input:checked) {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .experimental-zone {
+      border: 1px solid #bfdbfe;
+      background-color: #eff6ff;
+      padding: 16px;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .experimental-zone .dropzone {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: #bfdbfe;
+    }
+
+    .experimental-zone .dropzone:hover {
+      background: #fff;
+      border-color: var(--accent);
+    }
+
+    .experimental-zone button.secondary {
+      border-color: #bfdbfe;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .experimental-zone button.secondary:hover {
+      background: #fff;
+      border-color: var(--accent);
+    }
+
     input[type="color"].small-color {
       padding: 0;
       width: 22px;
@@ -446,24 +510,36 @@
 <body>
   <div class="wrap">
     <section class="panel stack">
-      <div>
-        <h1>ArcGrid VI Guide Lab</h1>
-        <p>Auto-generate construction lines for logos and export editable assets.</p>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <img src="/logo.png" alt="ArcGrid Logo"
+            style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;">
+          <h1 data-i18n="title" style="margin: 0;">ArcGrid VI Guide Lab</h1>
+        </div>
+        <div class="lang-switcher">
+          <label><input type="radio" name="lang" value="en"> EN</label>
+          <label><input type="radio" name="lang" value="zh" checked> 中</label>
+        </div>
       </div>
+      <p data-i18n="desc" style="margin-top: -4px;">Auto-generate construction lines for logos and export editable
+        assets.</p>
 
       <label class="dropzone">
         <svg class="dropzone-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
           stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          <path d="M12 22V13M12 13L15.5 16.5M12 13L8.5 16.5" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round"></path>
+          <path
+            d="M20 17.6073C21.4937 17.0221 23 15.6889 23 13C23 9 19.6667 8 18 8C18 6 18 2 12 2C6 2 6 6 6 8C4.33333 8 1 9 1 13C1 15.6889 2.50628 17.0221 4 17.6073"
+            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
         </svg>
-        <span style="color: var(--ink); font-weight: 500; font-size: 14px; margin-bottom: 4px;">Upload SVG File</span>
-        <span style="font-size: 12px; margin-bottom: 0;">Drag and drop or click to browse</span>
+        <span style="color: var(--ink); font-weight: 500; font-size: 14px;" data-i18n="uploadSvg">Upload SVG File</span>
+        <span style="font-size: 12px; margin-bottom: 0;" data-i18n="dragDrop">Drag and drop or click to browse</span>
         <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
       </label>
 
       <label class="stack">
-        <span>Or paste SVG Code</span>
+        <span data-i18n="pasteSvg">Or paste SVG Code</span>
         <textarea id="svgInput" class="auto-resize" placeholder="<svg>...</svg>"></textarea>
       </label>
 
@@ -477,56 +553,80 @@
         </select>
       </label>
 
-      <button class="primary" id="analyzeBtn">Analyze SVG</button>
+      <button class="primary" id="analyzeBtn" data-i18n="analyzeBtn">Analyze SVG</button>
 
-      <hr style="border: none; border-top: 1px solid var(--line); margin-top: 16px;" />
+      <div class="experimental-zone">
+        <div>
+          <h2 style="margin: 0 0 4px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+              style="flex-shrink: 0; color: var(--accent);">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M7.25 4C7.25 3.58579 7.58579 3.25 8 3.25L16 3.25C16.4142 3.25 16.75 3.58579 16.75 4C16.75 4.41421 16.4142 4.75 16 4.75L8 4.75C7.58579 4.75 7.25 4.41421 7.25 4Z"
+                fill="currentColor"></path>
+              <path
+                d="M9 3.75C9.41421 3.75 9.75 4.08579 9.75 4.5L9.75 10.2602C9.75 10.9166 9.51517 11.5514 9.08796 12.0498L7.20363 14.2482L16.7964 14.2482L14.912 12.0498C14.4848 11.5514 14.25 10.9166 14.25 10.2602L14.25 4.5C14.25 4.08579 14.5858 3.75 15 3.75C15.4142 3.75 15.75 4.08579 15.75 4.5L15.75 10.2602C15.75 10.5585 15.8567 10.8471 16.0509 11.0736L21.088 16.9502C21.5152 17.4486 21.75 18.0834 21.75 18.7398V19C21.75 20.5188 20.5188 21.75 19 21.75L5 21.75C3.48122 21.75 2.25 20.5188 2.25 19V18.7398C2.25 18.0834 2.48483 17.4486 2.91204 16.9502L7.94907 11.0736C8.14326 10.8471 8.25 10.5585 8.25 10.2602L8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75Z"
+                fill="currentColor"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M12.5117 8.44156C12.8196 8.71865 12.8446 9.19287 12.5675 9.50075L12.5575 9.51186C12.2804 9.81975 11.8062 9.84471 11.4983 9.56761C11.1904 9.29052 11.1654 8.8163 11.4425 8.50842L11.4525 8.49731C11.7296 8.18942 12.2038 8.16447 12.5117 8.44156Z"
+                fill="currentColor"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M11.5117 1.44156C11.8196 1.71865 11.8446 2.19287 11.5675 2.50075L11.5575 2.51186C11.2804 2.81975 10.8062 2.84471 10.4983 2.56761C10.1904 2.29052 10.1654 1.8163 10.4425 1.50842L10.4525 1.49731C10.7296 1.18942 11.2038 1.16447 11.5117 1.44156Z"
+                fill="currentColor"></path>
+            </svg>
+            <span data-i18n="phase2Title">Experimental Features</span>
+          </h2>
+          <p style="font-size: 12px; color: var(--muted); margin: 0;" data-i18n="phase2Desc">Requires Nana Banana API
+            configured in environment</p>
+        </div>
 
-      <div style="margin-bottom: 8px;">
-        <h2 style="margin: 0 0 4px; font-size: 14px; font-weight: 600;">Phase-2: Image to Vector</h2>
-        <p style="font-size: 12px; color: var(--muted); margin: 0;">Requires Nana Banana API configured in environment
-        </p>
+        <label class="dropzone">
+          <svg class="dropzone-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path
+              d="M21 3.6V20.4C21 20.7314 20.7314 21 20.4 21H3.6C3.26863 21 3 20.7314 3 20.4V3.6C3 3.26863 3.26863 3 3.6 3H20.4C20.7314 3 21 3.26863 21 3.6Z"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M3 16L10 13L21 18" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path
+              d="M16 10C14.8954 10 14 9.10457 14 8C14 6.89543 14.8954 6 16 6C17.1046 6 18 6.89543 18 8C18 9.10457 17.1046 10 16 10Z"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <span style="color: var(--ink); font-weight: 500; font-size: 14px;" data-i18n="uploadImg">Upload Image</span>
+          <span style="font-size: 12px; margin-bottom: 0;" data-i18n="dragDrop">Drag and drop or click to browse</span>
+          <input id="imageFile" type="file" accept="image/*" />
+        </label>
+
+        <button class="secondary" id="vectorizeBtn" data-i18n="vectorizeBtn">Vectorize Image + Analyze</button>
       </div>
 
-      <label class="dropzone">
-        <svg class="dropzone-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span style="color: var(--ink); font-weight: 500; font-size: 14px; margin-bottom: 4px;">Upload Image</span>
-        <span style="font-size: 12px; margin-bottom: 0;">Drag and drop or click to browse</span>
-        <input id="imageFile" type="file" accept="image/*" />
-      </label>
-
-      <button class="secondary" id="vectorizeBtn">Vectorize Image + Analyze</button>
-
-      <p id="status" class="foot" style="margin-top: 24px;">Ready.</p>
+      <p id="status" class="foot" data-i18n="statusReady">Ready.</p>
     </section>
 
     <section class="panel preview"
       style="position: relative; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
       <div class="meta"
-        style="padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <strong>Preview</strong>
-          <span id="signature" style="color: var(--muted); font-size: 13px; font-family: var(--font-mono);">Signature:
-            -</span>
+        style="padding: 16px 16px 0; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <strong data-i18n="previewTitle">Preview</strong>
+          <span id="signature" style="color: var(--muted); font-size: 13px; font-family: var(--font-mono);"></span>
         </div>
         <div class="row" style="margin-bottom: 0;">
           <button class="secondary" id="exportSvgBtn"
-            style="height: 32px; font-size: 12px; padding: 0 12px; white-space: nowrap;">Export SVG</button>
+            style="height: 32px; font-size: 12px; padding: 0 12px; white-space: nowrap;" data-i18n="exportSvg">Export
+            SVG</button>
           <button class="secondary" id="exportPdfBtn"
-            style="height: 32px; font-size: 12px; padding: 0 12px; white-space: nowrap;">Export PDF</button>
+            style="height: 32px; font-size: 12px; padding: 0 12px; white-space: nowrap;" data-i18n="exportPdf">Export
+            PDF</button>
         </div>
       </div>
 
       <div class="canvas-wrapper"
         style="border: none; border-radius: 0 0 var(--radius) var(--radius); flex: 1; min-height: 600px;">
         <div class="floating-header">
-          <div class="segmented-control">
-            <label><input id="toggleLogo" type="checkbox" checked /> logo</label>
-            <label><input id="toggleGuides" type="checkbox" checked /> guides</label>
-            <label><input id="toggleAnnotations" type="checkbox" checked /> annotations</label>
+          <div id="layersControl" class="segmented-control" style="display: none;">
+            <label data-i18n="layerLogo"><input id="toggleLogo" type="checkbox" checked /> logo</label>
+            <label data-i18n="layerGuides"><input id="toggleGuides" type="checkbox" checked /> guides</label>
+            <label data-i18n="layerAnnotations"><input id="toggleAnnotations" type="checkbox" checked />
+              annotations</label>
           </div>
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
             <div id="candidateList" class="segmented-control" style="display: none;">
@@ -535,13 +635,13 @@
             <div id="controlsWrapper" class="segmented-control"
               style="display: none; padding: 6px 12px; gap: 16px; align-items: center; color: var(--muted); font-size: 13px;">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <span>Curve</span>
+                <span data-i18n="curve">Curve</span>
                 <input type="color" id="circleColor" class="small-color" value="#0057ff" title="Curve Color" />
                 <input type="number" id="circleWeight" value="0.15" step="0.05" min="0.05"
                   style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Curve Weight" />
               </div>
               <div style="display: flex; align-items: center; gap: 6px;">
-                <span>Line</span>
+                <span data-i18n="line">Line</span>
                 <input type="color" id="lineColor" class="small-color" value="#ff6d00" title="Line Color" />
                 <input type="number" id="lineWeight" value="0.15" step="0.05" min="0.05"
                   style="width: 52px; padding: 2px 4px; min-height: 24px;" title="Line Weight" />

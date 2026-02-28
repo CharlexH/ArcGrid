@@ -63,7 +63,7 @@ export function analyzeLogo({ svgText, strategy = "auto", constraints = {} }) {
   }
 
   return {
-    analysisId: randomId("anl"),
+    analysisId: parsed.mockId ? "mock-result" : randomId("anl"),
     createdAt: nowIso(),
     signature: SOLVER_SIGNATURE,
     strategy,

@@ -9,5 +9,8 @@
     "lint": "node scripts/lint.mjs",
     "test": "node tests/run-tests.mjs",
     "verify:mock": "node scripts/verify-mock.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
   }
 }

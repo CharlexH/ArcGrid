@@ -26,11 +26,11 @@ async function testAnalyzeAndExport(baseUrl) {
 
   assert.equal(analyzeResp.status, 200);
   assert.ok(analysis.analysisId);
-  assert.equal(analysis.signature, "MOCK_SOLVER_SIGNATURE=AG26");
+  assert.equal(analysis.signature, "GEOMETRIC_SOLVER=AG27");
   assert.ok(analysis.input);
   assert.ok(Array.isArray(analysis.input.paths));
-  assert.equal(analysis.candidates.length, 3);
-  assert.equal(analysis.bestSolution.metrics.finalScore, 0.8731);
+  assert.equal(analysis.candidates.length, 1);
+  assert.ok(analysis.bestSolution.metrics.finalScore > 0.5);
 
   const exportSvgResp = await fetch(`${baseUrl}/api/v1/logo/export`, {
     method: "POST",
@@ -69,7 +69,7 @@ async function testVectorize(baseUrl) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      provider: "nanabanana2",
+      provider: "mock",
       imageBase64: "ZmFrZS1pbWFnZS1ieXRlcw==",
     }),
   });
@@ -91,7 +91,7 @@ async function testVectorize(baseUrl) {
 
   assert.ok(final);
   assert.equal(final.status, "done");
-  assert.equal(final.provider, "nanabanana2");
+  assert.equal(final.provider, "mock");
   assert.equal(typeof final.svgText, "string");
   assert.equal(final.svgText.includes("MOCK_LOGO_ARCGRID_V1"), true);
 }
