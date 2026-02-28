@@ -115,45 +115,58 @@ export function generateCandidates({ paths, bbox, strategy, constraints = {}, mo
 
   const calcComplexity = (g) => Math.min(1.0, (g.lines.length + g.circles.length) * 0.05);
 
-  return [
-    {
-      id: "cand_geometry_auto",
-      label: "Full Construction",
-      circles: allGeom.circles,
-      lines: allGeom.lines,
-      metrics: {
-        fitError: 0.10,
-        symmetryScore: 0.90,
-        complexityPenalty: calcComplexity(allGeom),
-        finalScore: Math.max(0.1, 0.95 - calcComplexity(allGeom) * 0.3),
-      },
-      explanation: "Extracts all straight guide extensions and underlying circular origins.",
+  const autoCand = {
+    id: "cand_geometry_auto",
+    label: "Full Construction",
+    circles: allGeom.circles,
+    lines: allGeom.lines,
+    metrics: {
+      fitError: 0.10,
+      symmetryScore: 0.90,
+      complexityPenalty: calcComplexity(allGeom),
+      finalScore: Math.max(0.1, 0.95 - calcComplexity(allGeom) * 0.3),
     },
-    {
-      id: "cand_geometry_circles",
-      label: "Circles Only (Curves)",
-      circles: curveGeom.circles,
-      lines: curveGeom.lines, // will be empty
-      metrics: {
-        fitError: 0.15,
-        symmetryScore: 0.85,
-        complexityPenalty: calcComplexity(curveGeom),
-        finalScore: Math.max(0.1, 0.85 - calcComplexity(curveGeom) * 0.3),
-      },
-      explanation: "Focuses exclusively on reconstructing origins for bezier curves.",
+    explanation: "Extracts all straight guide extensions and underlying circular origins.",
+  };
+
+  const curvesCand = {
+    id: "cand_geometry_circles",
+    label: "Circles Only (Curves)",
+    circles: curveGeom.circles,
+    lines: curveGeom.lines, // will be empty
+    metrics: {
+      fitError: 0.15,
+      symmetryScore: 0.85,
+      complexityPenalty: calcComplexity(curveGeom),
+      finalScore: Math.max(0.1, 0.85 - calcComplexity(curveGeom) * 0.3),
     },
-    {
-      id: "cand_geometry_lines",
-      label: "Lines Only (Straight)",
-      circles: straightGeom.circles, // will be empty
-      lines: straightGeom.lines,
-      metrics: {
-        fitError: 0.20,
-        symmetryScore: 0.80,
-        complexityPenalty: calcComplexity(straightGeom),
-        finalScore: Math.max(0.1, 0.80 - calcComplexity(straightGeom) * 0.3),
-      },
-      explanation: "Limits extraction to boundary-extended straight segments only.",
-    }
-  ];
+    explanation: "Focuses exclusively on reconstructing origins for bezier curves.",
+  };
+
+  const linesCand = {
+    id: "cand_geometry_lines",
+    label: "Lines Only (Straight)",
+    circles: straightGeom.circles, // will be empty
+    lines: straightGeom.lines,
+    metrics: {
+      fitError: 0.20,
+      symmetryScore: 0.80,
+      complexityPenalty: calcComplexity(straightGeom),
+      finalScore: Math.max(0.1, 0.80 - calcComplexity(straightGeom) * 0.3),
+    },
+    explanation: "Limits extraction to boundary-extended straight segments only.",
+  };
+
+  const curvesCount = curveGeom.circles.length;
+  const linesCount = straightGeom.lines.length;
+
+  // The user explicitly requested that curve-heavy graphics should default to NO straight lines.
+  // Straight lines can be very noisy, so we strongly preference curves if they are prominent.
+  if (curvesCount > 0 && curvesCount >= linesCount * 0.5) {
+    return [curvesCand, autoCand, linesCand];
+  } else if (linesCount > 0 && linesCount > curvesCount * 2) {
+    return [linesCand, autoCand, curvesCand];
+  }
+
+  return [autoCand, curvesCand, linesCand];
 }

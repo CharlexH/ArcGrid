@@ -1,10 +1,18 @@
-import { createServer } from "../src/server/app.mjs";
+import { serve } from "@hono/node-server";
+
+// Dynamically import the Hono app from the Cloudflare Pages function entry.
+// The [[route]].js exports `onRequest` via `handle(app)`, but we need the raw
+// Hono `app` instance.  We therefore re-export it from a thin wrapper that
+// the tests can consume.
+import { createTestApp } from "./hono-app.mjs";
 
 export async function withServer(run) {
-  const server = createServer();
+  const app = createTestApp();
+
+  const server = serve({ fetch: app.fetch, port: 0 });
 
   await new Promise((resolve) => {
-    server.listen(0, resolve);
+    server.once("listening", resolve);
   });
 
   const address = server.address();

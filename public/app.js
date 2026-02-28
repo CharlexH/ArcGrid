@@ -1,6 +1,6 @@
 const i18n = {
   en: {
-    title: "ArcGrid Guide Lab",
+    title: "ArcGrid",
     desc: "Auto-generate construction lines for logos and export editable assets.",
     uploadSvg: "Upload SVG File",
     dragDrop: "Drag and drop or click to browse",
@@ -12,7 +12,8 @@ const i18n = {
     vectorizeBtn: "Vectorize Image + Analyze",
     previewTitle: "Preview",
     exportSvg: "Export SVG",
-    exportPdf: "Export PDF",
+    displayLabel: "Display",
+    guidesFieldLabel: "Guides",
     layerLogo: "logo",
     layerGuides: "guides",
     layerAnnotations: "annotations",
@@ -22,7 +23,7 @@ const i18n = {
     statusReady: "Ready.",
     noAnalysis: "No analysis yet.",
     analyzing: "Analyzing SVG...",
-    analyzed: "Analyzed. bestScore=",
+    analyzed: "Analyzed.",
     uploadingSvg: "Loaded SVG file: {0}. Analyzing...",
     uploadFailed: "Failed to read/analyze SVG file.",
     loadedImg: "Loaded image: ",
@@ -39,7 +40,7 @@ const i18n = {
     copyright: "© 2024 Charlex"
   },
   zh: {
-    title: "ArcGrid 辅助线生成",
+    title: "ArcGrid",
     desc: "为图标自动生成几何结构辅助线，并导出可编辑的矢量资源。",
     uploadSvg: "上传 SVG 文件",
     dragDrop: "拖拽或点击浏览",
@@ -51,7 +52,8 @@ const i18n = {
     vectorizeBtn: "矢量化图片并分析",
     previewTitle: "预览",
     exportSvg: "导出 SVG",
-    exportPdf: "导出 PDF",
+    displayLabel: "显示",
+    guidesFieldLabel: "参考线",
     layerLogo: "图标",
     layerGuides: "参考线",
     layerAnnotations: "标注",
@@ -61,7 +63,7 @@ const i18n = {
     statusReady: "就绪。",
     noAnalysis: "暂无分析结果。",
     analyzing: "正在分析 SVG...",
-    analyzed: "分析完成。最高得分=",
+    analyzed: "分析完成。",
     uploadingSvg: "已加载 SVG 文件：{0}。正在分析...",
     uploadFailed: "读取/分析 SVG 文件失败。",
     loadedImg: "已加载图片：",
@@ -93,6 +95,7 @@ const state = {
   analysis: null,
   selectedCandidateId: null,
   imageBase64: null,
+  imageMimeType: null,
 };
 
 const svgInput = document.querySelector("#svgInput");
@@ -103,7 +106,6 @@ const imageFileInput = document.querySelector("#imageFile");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const vectorizeBtn = document.querySelector("#vectorizeBtn");
 const exportSvgBtn = document.querySelector("#exportSvgBtn");
-const exportPdfBtn = document.querySelector("#exportPdfBtn");
 const signatureEl = document.querySelector("#signature");
 const statusEl = document.querySelector("#status");
 const svgCanvas = document.querySelector("#svgCanvas");
@@ -113,6 +115,7 @@ const toggleLogo = document.querySelector("#toggleLogo");
 const toggleGuides = document.querySelector("#toggleGuides");
 const toggleAnnotations = document.querySelector("#toggleAnnotations");
 const layersControl = document.querySelector("#layersControl");
+const leftControlsGroup = document.querySelector("#leftControlsGroup");
 
 const MOCK_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 64 64"><path fill="#89664c" d="m52.2 7.9l2.5 2.6L60 7c2.2-.3 3.2-5-2.8-3.5c-1.5.4-3.8 1.5-5 4.4"/><path fill="#594640" d="M61.1 7c1.8-.7.5-2.8.5-2.8s.4 1.5-2.4 1.9c-4.1.6-5.2 3.6-5.2 3.6l.7.7s2.4-1.8 6.4-3.4"/><path fill="#699635" d="M53.5 6c8.8 9.3 1.2 23.3-7.6 39.5c-.7 1.4-1.5 2.7-2.2 4.1C37.5 61.1 28.4 62.3 23.5 62c-5.5-.4-11-3-14.7-6.9c-3.8-4-6.3-9.8-6.7-15.7c-.4-5.2.5-15.1 11.1-22c1.2-.8 2.5-1.6 3.7-2.4C31.8 5.2 44.7-3.3 53.5 6"/><g fill="#c7e755"><path d="M15 19.9C29.5 10.5 44.3-.5 52 7.7c7.7 8.1-7.5 18.6-16 34.5C27.5 58 17.1 60.7 10.2 53.5C3.4 46.2.4 29.4 15 19.9"/><path d="M11.8 51.8c1.6 1.6 3.3 2.5 5.3 2.6c5.5.4 11.6-4.8 16.7-14.2c2.9-5.5 6.6-10.3 9.9-14.6c5.2-6.7 10-13.1 6.9-16.4c-5.3-5.6-19 3.4-30 10.7c-1.2.8-2.5 1.6-3.7 2.4c-9.1 5.9-9.9 14-9.6 18.3c.3 4.4 2 8.6 4.5 11.2"/></g><path fill="#ffce31" d="M11.8 51.8c1.6 1.6 3.3 2.5 5.3 2.6c5.5.4 11.6-4.8 16.7-14.2c2.9-5.5 6.6-10.3 9.9-14.6c5.2-6.7 10-13.1 6.9-16.4c-5.3-5.6-19 3.4-30 10.7c-1.2.8-2.5 1.6-3.7 2.4c-9.1 5.9-9.9 14-9.6 18.3c.3 4.4 2 8.6 4.5 11.2" opacity=".33"/><path fill="#89664c" d="M17.2 27c6-6.6 14.8-6 16.6-2S33 35 29 39.4c-4.1 4.4-9.6 7.3-13.3 5.5c-3.8-1.8-4.5-11.3 1.5-17.9"/><path fill="#d3976e" d="M16.5 33.6c2.6-3.8 5.3-4.8 4.8-3.9c-.4.9-1.8 3.1-2.6 5.1c-.9 2-1.4 3.7-2.4 4.3c-1 .8-2.3-1.4.2-5.5"/><path fill="#594640" d="M26.4 36.7c-3.5 3.7-7.7 6.6-11.7 7.5c.3.3.6.6 1 .7c3.8 1.9 9.2-1 13.3-5.5C33 35 35.6 29 33.8 25c-.2-.4-.4-.7-.7-1c-.7 4.2-3.3 8.9-6.7 12.7"/></svg>`;
 
@@ -231,12 +234,11 @@ function animateGrowth() {
 function renderPreview() {
   if (!state.analysis) {
     svgCanvas.innerHTML = `<span style="color: #98a2ad">${t('noAnalysis')}</span>`;
-    candidateList.style.display = "none";
     signatureEl.textContent = "";
-    if (layersControl) layersControl.style.display = "none";
+    if (leftControlsGroup) leftControlsGroup.style.display = "none";
     return;
   }
-  if (layersControl) layersControl.style.display = "flex";
+  if (leftControlsGroup) leftControlsGroup.style.display = "flex";
 
   const layerSet = new Set(selectedLayers());
   const { bbox } = state.analysis.input;
@@ -305,9 +307,23 @@ function renderPreview() {
 
   signatureEl.textContent = `${t('signature')}${state.analysis.signature}`;
 
+  const guidesEnabled = layerSet.has("guides");
+  const opacityVal = guidesEnabled ? "1" : "0.4";
+  const pointerEventsVal = guidesEnabled ? "auto" : "none";
+
+  if (controlsWrapper) {
+    controlsWrapper.style.opacity = opacityVal;
+    controlsWrapper.style.pointerEvents = pointerEventsVal;
+    controlsWrapper.style.transition = "opacity 0.2s ease";
+  }
+
   if (state.analysis.candidates && state.analysis.candidates.length > 0) {
-    candidateList.style.display = "flex";
-    candidateList.innerHTML = state.analysis.candidates
+    candidateList.style.display = "";
+    candidateList.style.opacity = opacityVal;
+    candidateList.style.pointerEvents = pointerEventsVal;
+    candidateList.style.transition = "opacity 0.2s ease";
+    const labelPrefix = `<span data-i18n="guidesFieldLabel" class="text-[13px] font-medium text-[var(--color-muted)] w-16 flex-shrink-0 select-none whitespace-nowrap">${t('guidesFieldLabel')}</span>`;
+    candidateList.innerHTML = labelPrefix + state.analysis.candidates
       .map((candidate) => {
         let shortLabel = candidate.label;
         if (shortLabel.includes("Full")) shortLabel = t('cFull');
@@ -315,7 +331,7 @@ function renderPreview() {
         else if (shortLabel.includes("Lines")) shortLabel = t('cLines');
 
         const checked = candidate.id === state.selectedCandidateId ? "checked" : "";
-        return `<label><input type="radio" name="candidate" value="${candidate.id}" ${checked} /> ${shortLabel} (${candidate.metrics.finalScore})</label>`;
+        return `<label><input type="radio" name="candidate" value="${candidate.id}" ${checked} /> ${shortLabel}</label>`;
       })
       .join("");
 
@@ -343,7 +359,7 @@ async function analyzeSvg(svgText) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       svgText,
-      strategy: strategySelect.value,
+      strategy: strategySelect?.value ?? "auto",
       constraints: {
         minScore: 0.5,
         toleranceMult,
@@ -358,8 +374,8 @@ async function analyzeSvg(svgText) {
 
   state.analysis = data;
   state.selectedCandidateId = data.bestSolution.id;
-  setStatus(`${t('analyzed')}${data.bestSolution.metrics.finalScore}`);
-  if (controlsWrapper) controlsWrapper.style.display = "flex";
+  setStatus(`${t('analyzed')}`);
+  if (controlsWrapper) controlsWrapper.classList.remove("hidden");
   renderPreview();
 }
 
@@ -389,11 +405,15 @@ imageFileInput.addEventListener("change", async (event) => {
   const file = event.target.files?.[0];
   if (!file) {
     state.imageBase64 = null;
+    state.imageMimeType = null;
     return;
   }
   const reader = new FileReader();
   reader.onload = () => {
     const result = String(reader.result || "");
+    // Extract mimeType from data URL (e.g. "data:image/png;base64,...")
+    const mimeMatch = result.match(/^data:([^;]+);base64,/);
+    state.imageMimeType = mimeMatch ? mimeMatch[1] : file.type || "image/jpeg";
     const payload = result.includes(",") ? result.split(",")[1] : result;
     state.imageBase64 = payload;
     setStatus(`${t('loadedImg')}${file.name}`);
@@ -410,24 +430,16 @@ vectorizeBtn.addEventListener("click", async () => {
       body: JSON.stringify({
         provider: "nanabanana2",
         imageBase64: state.imageBase64,
+        mimeType: state.imageMimeType,
       }),
     });
 
-    const createData = await createResp.json();
-    if (!createResp.ok) {
-      throw new Error(`${createData.errorCode}: ${createData.errorMessage}`);
-    }
-
-    let job;
-    for (let i = 0; i < 150; i += 1) {
-      const poll = await fetch(`/api/v1/vectorize/${createData.jobId}`);
-      job = await poll.json();
-      if (job.status === "done" || job.status === "failed") break;
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-
-    if (!job || job.status !== "done") {
-      throw new Error(job?.errorMessage || t('vectorizationFailed'));
+    const job = await createResp.json();
+    if (!createResp.ok || job.status !== "done") {
+      if (job.errorCode === "RATE_LIMIT" || job.status === 429) {
+        throw new Error("RATE_LIMIT");
+      }
+      throw new Error(job.errorMessage || t('vectorizationFailed'));
     }
 
     svgInput.value = job.svgText;
@@ -448,11 +460,17 @@ async function exportResult(format) {
     return;
   }
 
+  const rawSvg = svgInput.value.trim() || MOCK_FALLBACK_SVG;
+
   const response = await fetch("/api/v1/logo/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      analysisId: state.analysis.analysisId,
+      svgText: rawSvg,
+      strategy: strategySelect?.value ?? "auto",
+      constraints: {
+        toleranceMult: parseFloat(document.querySelector("#toleranceRange")?.value || "2.5")
+      },
       format,
       includeLayers: selectedLayers(),
       styleConfig: {
@@ -488,13 +506,6 @@ exportSvgBtn.addEventListener("click", async () => {
   }
 });
 
-exportPdfBtn.addEventListener("click", async () => {
-  try {
-    await exportResult("pdf");
-  } catch (error) {
-    setStatus(error.message);
-  }
-});
 
 [toggleLogo, toggleGuides, toggleAnnotations].forEach((checkbox) => {
   checkbox.addEventListener("change", renderPreview);

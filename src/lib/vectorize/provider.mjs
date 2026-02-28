@@ -10,7 +10,7 @@ const MOCK_VECTOR_SVG = `
 </svg>
 `.trim();
 
-async function tryGeminiVectorize({ imageBase64, imageUrl, options = {} }) {
+async function tryGeminiVectorize({ imageBase64, imageUrl, mimeType, options = {} }) {
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -21,7 +21,7 @@ async function tryGeminiVectorize({ imageBase64, imageUrl, options = {} }) {
     throw new ApiFailure(424, "VECTORIZATION_FAILED", "Runtime fetch API unavailable.");
   }
 
-  const modelName = process.env.GEMINI_MODEL || "gemini-3.1-flash-image-preview";
+  const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   const payload = {
@@ -36,9 +36,11 @@ async function tryGeminiVectorize({ imageBase64, imageUrl, options = {} }) {
   };
 
   if (imageBase64) {
+    const resolvedMimeType = mimeType || "image/jpeg";
+    console.log(`[vectorize] Using mimeType: ${resolvedMimeType}`);
     payload.contents[0].parts.push({
       inlineData: {
-        mimeType: "image/jpeg",
+        mimeType: resolvedMimeType,
         data: imageBase64
       }
     });
@@ -96,10 +98,22 @@ async function tryGeminiVectorize({ imageBase64, imageUrl, options = {} }) {
   }
 
   const data = await response.json();
-  const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  // Thinking models may return thought parts before the actual text.
+  // Iterate through parts and find the last non-thought text part.
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  console.log(`[vectorize] Response has ${parts.length} part(s):`, parts.map((p, i) => `part[${i}] thought=${!!p.thought} hasText=${!!p.text}`).join(', '));
+
+  let textOutput = null;
+  for (const part of parts) {
+    if (part.text && !part.thought) {
+      textOutput = part.text;
+    }
+  }
 
   if (!textOutput) {
-    throw new ApiFailure(424, "VECTORIZATION_FAILED", "Gemini response missing text output.");
+    console.error('[vectorize] No valid text output found in response parts:', JSON.stringify(parts.map(p => ({ thought: p.thought, textLen: p.text?.length }))));
+    throw new ApiFailure(424, "VECTORIZATION_FAILED", "Gemini response missing text output (may contain only thought parts).");
   }
 
   // Extract SVG if it's wrapped in markdown
@@ -116,7 +130,7 @@ async function tryGeminiVectorize({ imageBase64, imageUrl, options = {} }) {
   };
 }
 
-export async function vectorizeInput({ provider, imageBase64, imageUrl, options }) {
+export async function vectorizeInput({ provider, imageBase64, imageUrl, mimeType, options }) {
   if (provider === "mock") {
     return {
       mode: "mock",
@@ -132,7 +146,7 @@ export async function vectorizeInput({ provider, imageBase64, imageUrl, options 
     throw new ApiFailure(400, "INVALID_REQUEST", "Either imageBase64 or imageUrl is required.");
   }
 
-  return tryGeminiVectorize({ imageBase64, imageUrl, options });
+  return tryGeminiVectorize({ imageBase64, imageUrl, mimeType, options });
 }
 
 export const mockVectorSvg = MOCK_VECTOR_SVG;
