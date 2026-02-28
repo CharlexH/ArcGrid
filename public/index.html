@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArcGrid Logo Guide Constructor</title>
+    <style>
+      :root {
+        --bg: #f8f4ec;
+        --panel: #fffaf3;
+        --ink: #17202a;
+        --muted: #5f6b76;
+        --line: #d8c7aa;
+        --accent: #0057ff;
+        --accent-2: #ff6d00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 10%, #ffe6bf 0%, transparent 42%),
+          radial-gradient(circle at 90% 30%, #f6d6ff 0%, transparent 30%),
+          linear-gradient(160deg, #f7f2e9 0%, #f0efe9 100%);
+      }
+
+      .wrap {
+        width: min(1200px, 92vw);
+        margin: 40px auto 60px;
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 20px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 38px rgba(30, 35, 40, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.8rem;
+        letter-spacing: 0.02em;
+      }
+
+      p {
+        margin: 4px 0;
+        color: var(--muted);
+      }
+
+      textarea,
+      input,
+      select,
+      button {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        padding: 10px 12px;
+        font: inherit;
+        background: #fff;
+      }
+
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+        font-family: "SF Mono", "Menlo", monospace;
+        font-size: 13px;
+      }
+
+      button {
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+
+      button.secondary {
+        background: #fff3e5;
+        border-color: #ffd2ab;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .row > * {
+        flex: 1;
+      }
+
+      .stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .preview {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 700px;
+      }
+
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      #signature {
+        color: var(--accent-2);
+        font-weight: 700;
+      }
+
+      #svgCanvas {
+        width: 100%;
+        height: 100%;
+        min-height: 520px;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        background: #fff;
+        overflow: auto;
+        display: grid;
+        place-items: center;
+      }
+
+      .candidate-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .candidate-item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .candidate-item.active {
+        border-color: var(--accent);
+        background: #edf3ff;
+      }
+
+      .foot {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 980px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="panel stack">
+        <div>
+          <h1>ArcGrid VI Guide Lab</h1>
+          <p>Auto-generate construction lines for logos and export editable assets.</p>
+        </div>
+
+        <label class="stack">
+          <span>SVG Input</span>
+          <textarea id="svgInput" placeholder="Paste SVG here"></textarea>
+        </label>
+
+        <div class="row">
+          <label class="stack">
+            <span>SVG File Upload</span>
+            <input id="svgFile" type="file" accept=".svg,image/svg+xml" />
+          </label>
+          <label class="stack">
+            <span>Strategy</span>
+            <select id="strategy">
+              <option value="auto">auto</option>
+              <option value="circleFirst">circleFirst</option>
+              <option value="gridFirst">gridFirst</option>
+            </select>
+          </label>
+        </div>
+
+        <button class="primary" id="analyzeBtn">Analyze SVG</button>
+
+        <hr style="border: none; border-top: 1px solid var(--line)" />
+
+        <label class="stack">
+          <span>Image URL (phase-2: vectorize -> analyze)</span>
+          <input id="imageUrl" placeholder="https://example.com/logo.png" />
+        </label>
+
+        <label class="stack">
+          <span>Image Upload (base64)</span>
+          <input id="imageFile" type="file" accept="image/*" />
+        </label>
+
+        <button class="secondary" id="vectorizeBtn">Vectorize Image + Analyze</button>
+
+        <div class="row">
+          <button id="exportSvgBtn">Export SVG</button>
+          <button id="exportPdfBtn">Export PDF</button>
+        </div>
+
+        <p id="status" class="foot">Ready.</p>
+      </section>
+
+      <section class="panel preview">
+        <div class="meta">
+          <strong>Preview</strong>
+          <span id="signature">Signature: -</span>
+        </div>
+
+        <div id="svgCanvas">
+          <span style="color: #98a2ad">No analysis yet.</span>
+        </div>
+
+        <div class="stack">
+          <div class="row">
+            <label><input id="toggleLogo" type="checkbox" checked /> logo</label>
+            <label><input id="toggleGuides" type="checkbox" checked /> guides</label>
+            <label><input id="toggleAnnotations" type="checkbox" checked /> annotations</label>
+          </div>
+          <div id="candidateList" class="candidate-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

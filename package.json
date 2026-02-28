@@ -1,0 +1,13 @@
+{
+  "name": "arcgrid-logo-guides",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server/app.mjs",
+    "start": "node src/server/app.mjs",
+    "lint": "node scripts/lint.mjs",
+    "test": "node tests/run-tests.mjs",
+    "verify:mock": "node scripts/verify-mock.mjs"
+  }
+}
