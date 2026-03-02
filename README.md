@@ -1,72 +1,6 @@
 # ArcGrid Guide Lab 📐
 
-[English](#english) | [中文](#中文)
-
----
-
-![ArcGrid Preview](public/arcgrid_preview.webp)
-
-## English
-
-**ArcGrid** is a specialized web application prototype designed for generating manual-style logo construction guides. It automates the process of creating professional construction lines and geometric annotations for logo designs.
-
-**✨ Live Demo:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
-
-### ✨ Key Features
-
-- **Double-Track Input System**:
-  - **SVG Direct Input**: Upload or paste SVG code to analyze existing vector shapes.
-  - **AI Image Vectorization**: (Experimental) Convert raster images (PNG/JPG) to SVG using Gemini AI before running the construction analysis.
-- **Intelligent Geometry Analysis**:
-  - Automatically detects circles, arcs, and alignment lines to create "Candidate" construction guides.
-  - **Robust SVG Processing**: Automatically handles stroke-to-fill conversions, preserves hollow effects, and ignores non-renderable `<defs>`.
-- **Interactive Customization & Visualization**:
-  - Toggle visibility for the logo, guides, and annotations.
-  - **Adjustable Analysis Tolerance**: Fine-tune geometry detection sensitivity in real-time using the tolerance slider.
-  - **Dynamic Growth Animation**: Visually engaging animated line-drawing effect during SVG rendering.
-  - Adjust guide line colors and weights (Curve vs. Line) in real-time.
-  - Switch between multiple analysis candidates to find the best geometric fit.
-- **Professional Export**: Export your finalized construction guide as high-quality **SVG** or **PDF**.
-
-### 🚀 Getting Started
-
-#### Prerequisites
-
-- Node.js (v18+)
-- npm
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (Optional, for Cloudflare deployment)
-
-#### Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd ArcGrid
-
-# Install dependencies
-npm install
-```
-
-#### Running the App
-
-```bash
-# Start the development server (runs Tailwind CLI + Wrangler Pages dev)
-npm run dev
-```
-
-The application will be available at `http://localhost:8788`.
-
-### ⚙️ API Configuration
-
-No environment variables are required. You can directly input your **Gemini API Key** within the settings panel on the webpage. The AI model is pre-configured to use **gemini-3.1-flash-image-preview**. Your API key will be securely saved in your browser's local storage.
-
-*Note: The Gemini API is required for the experimental image-to-svg vectorization feature.*
-
-### 🛠 Tech Stack
-
-- **Frontend**: Vanilla HTML5, Tailwind CSS, JavaScript (ES Modules).
-- **Backend / Hosting**: Cloudflare Pages Functions (Hono.js).
-- **AI Integration**: Google Gemini API for image analysis and vectorization.
+[中文](#中文) | [English](#english)
 
 ---
 
@@ -81,11 +15,11 @@ No environment variables are required. You can directly input your **Gemini API 
 ### ✨ 核心功能
 
 - **双轨输入系统**:
-  - **SVG 直接输入**: 支持上传或粘贴 SVG 代码，直接对现有矢量形状进行分析。
-  - **AI 图像矢量化**: (实验性) 使用 Gemini AI 将位图 (PNG/JPG) 转换为 SVG，随后进入分析流程。
+  - **SVG 直接输入**: 支持上传或粘贴 SVG 代码，直接对现有矢量形状进行分析。优化了 UI 布局，操作更加便捷。
+  - **AI 图像矢量化**: (实验性) 使用 Gemini AI 将位图 (PNG/JPG) 转换为 SVG，随后进入分析流程。新增上传图像预览与删除功能。
 - **智能几何分析**:
-  - 自动识别圆形、圆弧和对齐线，生成多种“候选”辅助线方案。
-  - **强大的 SVG 处理**: 自动处理描边到填充的转换，保留镂空效果，并智能忽略 `<defs>` 等非渲染内容。
+  - 自动识别圆形、圆弧和对齐线，生成多种“候选”辅助线方案。更优的默认视图，现默认展示所有参考线。
+  - **强大的 SVG 处理**: 自动处理描边到填充的转换，保留镂空效果，智能剔除非渲染内容 `<defs>`。近期修复并增强了具有复杂变换矩阵的 SVG 解析及辅助线对齐问题。
 - **交互式自定义与可视化**:
   - 可动态切换 Logo 层、辅助线层和标注层的显示。
   - **动态容差调整**: 使用滑块实时微调几何特征检测的灵敏度。
@@ -124,7 +58,7 @@ npm run dev
 
 ### ⚙️ API 配置
 
-无需配置环境变量。您可以直接在网页的设置面板中输入您的 **Gemini API Key**，AI 模型已预选为 **gemini-3.1-flash-image-preview**。您的 API Key 将被被安全地保存在浏览器的本地存储 (Local Storage) 中。
+无需配置环境变量。您可以直接在网页的设置面板中输入您的 **Gemini API Key**。应用现已支持预选最新的 **gemini-3.1-flash-image-preview** 与 **gemini-2.5-flash-image** 视觉模型。您的 API Key 将被安全地保存在浏览器的本地存储 (Local Storage) 中。
 
 *注意：Gemini API 仅在使用实验性的“图像转 SVG”功能时需要。*
 
@@ -133,6 +67,70 @@ npm run dev
 - **前端**: 原生 HTML5, Tailwind CSS, JavaScript (ES Modules)。
 - **后端 / 部署**: Cloudflare Pages Functions (Hono.js)。
 - **AI 集成**: 接入 Google Gemini API 进行图像分析与矢量化。
+
+---
+
+## English
+
+**ArcGrid** is a specialized web application prototype designed for generating manual-style logo construction guides. It automates the process of creating professional construction lines and geometric annotations for logo designs.
+
+**✨ Live Demo:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
+
+### ✨ Key Features
+
+- **Double-Track Input System**:
+  - **SVG Direct Input**: Upload or paste SVG code to analyze existing vector shapes, featuring an optimized, compact UI layout.
+  - **AI Image Vectorization**: (Experimental) Convert raster images (PNG/JPG) to SVG using Gemini AI before running the construction analysis. Now supports image preview and deletion capabilities.
+- **Intelligent Geometry Analysis**:
+  - Automatically detects circles, arcs, and alignment lines to create "Candidate" construction guides. Reference lines are now displayed by default for better clarity.
+  - **Robust SVG Processing**: Automatically handles stroke-to-fill conversions, preserves hollow effects, and ignores non-renderable `<defs>`. Enhanced with recent bug fixes for complex transformation matrices resulting in accurate SVG parsing and precise reference line alignment.
+- **Interactive Customization & Visualization**:
+  - Toggle visibility for the logo, guides, and annotations.
+  - **Adjustable Analysis Tolerance**: Fine-tune geometry detection sensitivity in real-time using the tolerance slider.
+  - **Dynamic Growth Animation**: Visually engaging animated line-drawing effect during SVG rendering.
+  - Adjust guide line colors and weights (Curve vs. Line) in real-time.
+  - Switch between multiple analysis candidates to find the best geometric fit.
+- **Professional Export**: Export your finalized construction guide as high-quality **SVG** or **PDF**.
+
+### 🚀 Getting Started
+
+#### Prerequisites
+
+- Node.js (v18+)
+- npm
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (Optional, for Cloudflare deployment)
+
+#### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd ArcGrid
+
+# Install dependencies
+npm install
+```
+
+#### Running the App
+
+```bash
+# Start the development server (runs Tailwind CLI + Wrangler Pages dev)
+npm run dev
+```
+
+The application will be available at `http://localhost:8788`.
+
+### ⚙️ API Configuration
+
+No environment variables are required. You can directly input your **Gemini API Key** within the settings panel on the webpage. Multiple model options are available, including the latest **gemini-3.1-flash-image-preview** and **gemini-2.5-flash-image**. Your API key will be securely saved in your browser's local storage.
+
+*Note: The Gemini API is required for the experimental image-to-svg vectorization feature.*
+
+### 🛠 Tech Stack
+
+- **Frontend**: Vanilla HTML5, Tailwind CSS, JavaScript (ES Modules).
+- **Backend / Hosting**: Cloudflare Pages Functions (Hono.js).
+- **AI Integration**: Google Gemini API for image analysis and vectorization.
 
 ---
 
