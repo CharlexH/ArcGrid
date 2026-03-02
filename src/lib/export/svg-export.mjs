@@ -60,11 +60,18 @@ export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "a
   }
 
   if (includeLayers.includes("annotations")) {
-    layers.push(`<g id="annotations-layer"><text x="${bbox.minX}" y="${bbox.maxY + fwA * 1.5}" fill="#111" font-family="monospace" font-size="${fwA}">${solverSignature}</text><text x="${bbox.minX}" y="${bbox.maxY + fwA * 3}" fill="#111" font-family="monospace" font-size="${fwA}">score=${bestSolution.metrics.finalScore}</text></g>`);
+    const offsetX = fwA * 1.5;
+    const offsetY = fwA * 0.5;
+    layers.push(`<g id="annotations-layer">
+      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 1.5 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">${solverSignature}</text>
+      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 3 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Score: ${bestSolution.metrics.finalScore.toFixed(2)} (Fit: ${bestSolution.metrics.fitError.toFixed(2)} | Sym: ${bestSolution.metrics.symmetryScore.toFixed(2)})</text>
+      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 4.5 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Elements: ${bestSolution.lines.length} Lines, ${bestSolution.circles.length} Curves</text>
+      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 6 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Strategy: ${analysis.strategy}</text>
+    </g>`);
   }
 
   return `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2 + fwA * 4}" data-analysis-id="${analysis.analysisId}">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2 + fwA * 8}" data-analysis-id="${analysis.analysisId}">
   ${layers.join("\n")}
 </svg>
 `.trim();

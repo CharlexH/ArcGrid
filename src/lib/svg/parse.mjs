@@ -11,7 +11,7 @@ const ELLIPSE_TAG_REGEX = /<ellipse\b[^>]*>/gi;
 const LINE_TAG_REGEX = /<line\b[^>]*>/gi;
 
 function extractAttr(tag, name) {
-  const regex = new RegExp(`${name}\\s*=\\s*(["'])(.*?)\\1`, "i");
+  const regex = new RegExp(`\\b${name}\\s*=\\s*(["'])(.*?)\\1`, "i");
   const match = tag.match(regex);
   return match ? match[2] : null;
 }
@@ -310,10 +310,9 @@ export function parseSvg(svgText) {
   // Preprocess and optimize SVG string
   const optimizedSvg = sanitizeSvg(svgText);
 
-  // Strip non-rendering containers so their children aren't matched as geometry
-  const cleanedSvg = optimizedSvg
-    .replace(/<defs[\s\S]*?<\/defs>/gi, "")
-    .replace(/<clipPath[\s\S]*?<\/clipPath>/gi, "");
+  // We no longer strip <defs> and <clipPath> because some SVGs (like test9.svg)
+  // use clip paths as their primary logo shape mask, which we need to analyse.
+  const cleanedSvg = optimizedSvg;
 
   const paths = [];
   let index = 1;
@@ -468,11 +467,31 @@ export function parseSvg(svgText) {
     throw new ApiFailure(400, "INVALID_SVG", "No supported geometry found in SVG.");
   }
 
+  const svgMatch = svgText.match(/<svg([^>]*)>/i);
+  let explicitViewBox = null;
+  if (svgMatch) {
+    const vbAttr = extractAttr(svgMatch[0], "viewBox");
+    if (vbAttr) {
+      const parts = vbAttr.split(/[\s,]+/).map(Number);
+      if (parts.length === 4 && parts.every(Number.isFinite)) {
+        explicitViewBox = {
+          minX: parts[0],
+          minY: parts[1],
+          width: parts[2],
+          height: parts[3],
+          maxX: parts[0] + parts[2],
+          maxY: parts[1] + parts[3],
+        };
+      }
+    }
+  }
+
   const mockId = svgText.includes("MOCK_LOGO_ARCGRID_V1") ? "MOCK_LOGO_ARCGRID_V1" : null;
 
   return {
     raw: svgText,
     paths,
     mockId,
+    explicitViewBox,
   };
 }

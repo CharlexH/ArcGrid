@@ -38,7 +38,7 @@ function randomId(prefix) {
 export function analyzeLogo({ svgText, strategy = "auto", constraints = {} }) {
   const startedAt = Date.now();
   const parsed = parseSvg(svgText);
-  const normalized = normalizePaths(parsed.paths);
+  const normalized = normalizePaths(parsed.paths, parsed.explicitViewBox);
 
   const candidates = generateCandidates({
     paths: normalized.paths,

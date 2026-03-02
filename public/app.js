@@ -4,11 +4,12 @@ const i18n = {
     desc: "Auto-generate construction lines for logos and export editable assets.",
     uploadSvg: "Upload SVG File",
     dragDrop: "Drag and drop or click to browse",
-    pasteSvg: "Or paste SVG Code",
+    pasteSvg: "Paste code or upload SVG",
     analyzeBtn: "Analyze SVG",
     phase2Title: "Experimental Features",
     phase2Desc: "Requires Gemini API",
     apiKeyLabel: "API Key",
+    modelLabel: "Model",
     apiKeyMissing: "Please enter your Gemini API Key first.",
     uploadImg: "Upload Image",
     vectorizeBtn: "Vectorize Image + Analyze",
@@ -46,11 +47,12 @@ const i18n = {
     desc: "为图标自动生成几何结构辅助线，并导出可编辑的矢量资源。",
     uploadSvg: "上传 SVG 文件",
     dragDrop: "拖拽或点击浏览",
-    pasteSvg: "或粘贴 SVG 代码",
+    pasteSvg: "粘贴代码或上传SVG",
     analyzeBtn: "分析 SVG",
     phase2Title: "实验功能",
     phase2Desc: "需要 Gemini API",
     apiKeyLabel: "API Key",
+    modelLabel: "AI 模型",
     apiKeyMissing: "请先输入 Gemini API Key。",
     uploadImg: "上传图片",
     vectorizeBtn: "矢量化图片并分析",
@@ -107,9 +109,13 @@ const svgFile = document.querySelector("#svgFile");
 const controlsWrapper = document.querySelector("#controlsWrapper");
 
 const imageFileInput = document.querySelector("#imageFile");
+const imagePreview = document.querySelector("#imagePreview");
+const imageUploadContent = document.querySelector("#imageUploadContent");
+const removeImageBtn = document.querySelector("#removeImageBtn");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const vectorizeBtn = document.querySelector("#vectorizeBtn");
 const geminiApiKeyInput = document.querySelector("#geminiApiKey");
+const geminiModelSelect = document.querySelector("#geminiModel");
 
 // Restore API key from localStorage
 if (geminiApiKeyInput) {
@@ -117,6 +123,14 @@ if (geminiApiKeyInput) {
   if (savedKey) geminiApiKeyInput.value = savedKey;
   geminiApiKeyInput.addEventListener("input", () => {
     localStorage.setItem("arcgrid_gemini_api_key", geminiApiKeyInput.value.trim());
+  });
+}
+
+if (geminiModelSelect) {
+  const savedModel = localStorage.getItem("arcgrid_gemini_model");
+  if (savedModel) geminiModelSelect.value = savedModel;
+  geminiModelSelect.addEventListener("change", () => {
+    localStorage.setItem("arcgrid_gemini_model", geminiModelSelect.value);
   });
 }
 
@@ -142,8 +156,7 @@ Your task is to perform a high-fidelity, professional vectorization of the provi
 Analyze the image structure carefully to ensure the vector output is a pixel-perfect geometric reconstruction.
 `;
 
-async function geminiVectorize(apiKey, imageBase64, mimeType) {
-  const modelName = "gemini-3-pro-image-preview";
+async function geminiVectorize(apiKey, modelName, imageBase64, mimeType) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   const payload = {
@@ -166,7 +179,7 @@ async function geminiVectorize(apiKey, imageBase64, mimeType) {
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     if (attempt > 0) {
-      const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+      const delay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 1000;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
 
@@ -178,10 +191,10 @@ async function geminiVectorize(apiKey, imageBase64, mimeType) {
 
     if (response.ok) break;
 
-    if (response.status === 429 && attempt < maxRetries) continue;
+    if (response.status >= 500 && attempt < maxRetries) continue;
 
     if (response.status === 429) throw new Error("RATE_LIMIT");
-    throw new Error(`Gemini API failed with status ${response.status}`);
+    throw new Error(`Gemini API failed with status ${response.status} / ${response.statusText}`);
   }
 
   const data = await response.json();
@@ -343,27 +356,25 @@ function renderPreview() {
   const swG = bbox.width * 0.002;
   const fwA = bbox.width * 0.03;
 
-  let originalContent = "";
-  let svgRootAttrs = "";
-  if (state.analysis.input.raw) {
+  let logoLayer = "";
+  if (layerSet.has("logo") && state.analysis.input.raw) {
     const rawSvg = state.analysis.input.raw;
-    const svgTagMatch = rawSvg.match(/<svg([^>]*)>([\s\S]*?)<\/svg>/i);
-    if (svgTagMatch) {
-      originalContent = svgTagMatch[2];
-      // Extract presentation attributes from root <svg> to preserve on wrapper <g>
-      const attrs = svgTagMatch[1];
-      const inheritParts = [];
-      for (const name of ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "opacity"]) {
-        const m = attrs.match(new RegExp(`${name}\\s*=\\s*["']([^"']*)["']`, "i"));
-        if (m) inheritParts.push(`${name}="${m[1]}"`);
-      }
-      svgRootAttrs = inheritParts.join(" ");
+    // Extract presentation attributes from original <svg> to preserve inheritance
+    const svgOpenTag = rawSvg.match(/<svg([^>]*)>/i);
+    const rootAttrs = svgOpenTag ? svgOpenTag[1] : "";
+    const inheritParts = [];
+    for (const name of ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "fill-rule", "clip-rule", "color"]) {
+      const m = rootAttrs.match(new RegExp(`${name}\\s*=\\s*["']([^"']*?)["']`, "i"));
+      if (m) inheritParts.push(`${name}="${m[1]}"`);
     }
+    const inheritedAttrs = inheritParts.join(" ");
+    // Extract inner content (everything between <svg...> and </svg>)
+    // Render in a plain <g> so the logo content shares the SAME coordinate space
+    // as the guide lines/circles (which are computed from parsed+transformed points).
+    // Using a nested <svg> with viewBox would remap coordinates and cause misalignment.
+    const innerContent = rawSvg.replace(/<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+    logoLayer = `<g opacity="0.6" ${inheritedAttrs}>${innerContent}</g>`;
   }
-
-  const logoLayer = layerSet.has("logo")
-    ? `<g opacity="0.6" ${svgRootAttrs}>${originalContent}</g>`
-    : "";
 
   const lineColorStr = document.querySelector("#lineColor")?.value || "#ff6d00";
   const circleColorStr = document.querySelector("#circleColor")?.value || "#0057ff";
@@ -390,13 +401,19 @@ function renderPreview() {
       .join("\n")
     : "";
 
+  const offsetX = fwA * 1.5;
+  const offsetY = fwA * 0.5;
   const annotationLayer = layerSet.has("annotations")
-    ? `<text x="${bbox.minX}" y="${bbox.maxY + fwA * 1.5}" fill="#222" font-family="monospace" font-size="${fwA}">${state.analysis.signature}</text><text x="${bbox.minX}" y="${bbox.maxY + fwA * 3}" fill="#222" font-family="monospace" font-size="${fwA}">score=${candidate.metrics.finalScore}</text>`
+    ? `<text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 1.5 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">${state.analysis.signature}</text>
+       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 3 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">Score: ${candidate.metrics.finalScore.toFixed(2)} (Fit: ${candidate.metrics.fitError.toFixed(2)} | Sym: ${candidate.metrics.symmetryScore.toFixed(2)})</text>
+       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 4.5 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">Elements: ${candidate.lines.length} Lines, ${candidate.circles.length} Curves</text>
+       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 6 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">Strategy: ${state.analysis.strategy}</text>`
     : "";
 
   const padX = bbox.width * 0.2;
   const padY = bbox.height * 0.2;
-  svgCanvas.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2 + fwA * 4}" style="width: 100%; max-height: 560px;">\n${logoLayer}\n${guideCircles}\n${guideLines}\n${annotationLayer}\n</svg>`;
+  // Adjusted viewBox height to accommodate for shifted annotations and extra lines
+  svgCanvas.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2 + fwA * 8}" style="width: 100%; max-height: 560px;">\n${logoLayer}\n${guideCircles}\n${guideLines}\n${annotationLayer}\n</svg>`;
 
   animateGrowth();
 
@@ -509,11 +526,27 @@ svgFile.addEventListener("change", async (event) => {
   }
 });
 
+function clearImagePreview() {
+  state.imageBase64 = null;
+  state.imageMimeType = null;
+  if (imageFileInput) imageFileInput.value = "";
+  if (imagePreview) {
+    imagePreview.src = "";
+    imagePreview.classList.add("hidden");
+    imageUploadContent?.classList.remove("hidden");
+    removeImageBtn?.classList.add("hidden");
+    removeImageBtn?.classList.remove("flex");
+  }
+  setStatus(t('statusReady'));
+}
+
+if (removeImageBtn) {
+  removeImageBtn.addEventListener("click", clearImagePreview);
+}
+
 imageFileInput.addEventListener("change", async (event) => {
   const file = event.target.files?.[0];
   if (!file) {
-    state.imageBase64 = null;
-    state.imageMimeType = null;
     return;
   }
   const reader = new FileReader();
@@ -524,6 +557,15 @@ imageFileInput.addEventListener("change", async (event) => {
     state.imageMimeType = mimeMatch ? mimeMatch[1] : file.type || "image/jpeg";
     const payload = result.includes(",") ? result.split(",")[1] : result;
     state.imageBase64 = payload;
+
+    if (imagePreview) {
+      imagePreview.src = result;
+      imagePreview.classList.remove("hidden");
+      imageUploadContent?.classList.add("hidden");
+      removeImageBtn?.classList.remove("hidden");
+      removeImageBtn?.classList.add("flex");
+    }
+
     setStatus(`${t('loadedImg')}${file.name}`);
   };
   reader.readAsDataURL(file);
@@ -553,12 +595,54 @@ vectorizeBtn.addEventListener("click", async () => {
   vectorizeBtn.innerHTML = `${spinnerSvg}<span>${vectorizeBtnDefaultText()}</span>`;
 
   try {
-    setStatus(t('submitting'));
-    const svgText = await geminiVectorize(apiKey, state.imageBase64, state.imageMimeType);
+    const selectedModel = geminiModelSelect ? geminiModelSelect.value : "gemini-3.1-flash-image-preview";
+    const allModels = [
+      "gemini-3.1-flash-image-preview",
+      "gemini-3-pro-image-preview",
+      "gemini-2.5-flash-image"
+    ];
+    // Deduplicate: start with selected, then try the rest
+    const modelsToTry = [...new Set([selectedModel, ...allModels])];
+
+    let svgText = null;
+    let lastError = null;
+    let usedModel = null;
+    let triedModels = [];
+
+    for (const modelName of modelsToTry) {
+      try {
+        let statusMsg = `${t('submitting')} (${modelName})...`;
+        if (triedModels.length > 0) {
+          statusMsg = `Retry: ${modelName} ...`;
+        }
+        setStatus(statusMsg);
+
+        svgText = await geminiVectorize(apiKey, modelName, state.imageBase64, state.imageMimeType);
+
+        // Update selection if we fell back
+        if (geminiModelSelect && geminiModelSelect.value !== modelName) {
+          geminiModelSelect.value = modelName;
+          localStorage.setItem("arcgrid_gemini_model", modelName);
+        }
+        usedModel = modelName;
+        break; // Success!
+      } catch (err) {
+        console.warn(`Vectorize with ${modelName} failed:`, err);
+        lastError = err;
+        triedModels.push(modelName);
+        setStatus(`Failed (${modelName}). Trying next...`);
+        // Add a tiny delay so the user can read the "Failed" message if it loops fast
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    if (!svgText) {
+      throw lastError || new Error("All models failed.");
+    }
 
     svgInput.value = svgText;
     await analyzeSvg(svgText);
-    setStatus(t('vectorized', 'live'));
+    setStatus(`${t('vectorized', 'live')} [${usedModel}]`);
 
     // Success: show checkmark
     vectorizeBtn.innerHTML = `${checkSvg}<span>${vectorizeBtnDefaultText()}</span>`;

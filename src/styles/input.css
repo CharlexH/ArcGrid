@@ -26,7 +26,7 @@ body {
 }
 
 @utility grid-layout-main {
-  grid-template-columns: minmax(240px, 380px) minmax(540px, 1fr);
+  grid-template-columns: minmax(240px, 320px) minmax(540px, 1fr);
 }
 
 /* Custom checkbox styling for a more industrial feel */

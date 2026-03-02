@@ -55,7 +55,7 @@ async function tryGeminiVectorize({ imageBase64, imageUrl, mimeType, options = {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (attempt > 0) {
-        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+        const delay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 1000;
         console.log(`Retrying Gemini API (attempt ${attempt}/${maxRetries}) after ${Math.round(delay)}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
@@ -75,18 +75,24 @@ async function tryGeminiVectorize({ imageBase64, imageUrl, mimeType, options = {
       const errorText = await response.text();
       console.error(`Gemini API Error (Status ${response.status}):`, errorText);
 
-      if (response.status === 429 && attempt < maxRetries) {
+      const isRetryable = response.status >= 500;
+      if (isRetryable && attempt < maxRetries) {
         continue;
       }
 
       throw new ApiFailure(
         response.status === 429 ? 429 : 424,
         response.status === 429 ? "RATE_LIMIT" : "VECTORIZATION_FAILED",
-        `Gemini API failed with status ${response.status}.`
+        `Gemini API failed with status ${response.status} / ${response.statusText}`
       );
     } catch (e) {
       lastError = e;
-      if (e instanceof ApiFailure && e.status === 429 && attempt < maxRetries) {
+      const isNetworkError = !e.status; // fetch system errors
+      if (isNetworkError && attempt < maxRetries) {
+        console.warn(`[vectorize] Network/System error during Gemini API call: ${e.message}. Retrying...`);
+        continue;
+      }
+      if (e instanceof ApiFailure && (e.status === 429 || e.status >= 500) && attempt < maxRetries) {
         continue;
       }
       throw e;
