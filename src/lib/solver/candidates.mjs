@@ -6,11 +6,83 @@ import {
   isApproxCircularArc
 } from "./math.mjs";
 
+// Maximum number of guide elements to keep (prevents visual noise on complex logos)
+const MAX_LINES = 60;
+const MAX_CIRCLES = 40;
+
+// Minimum segment length as a fraction of bbox width
+// 0.03 = 3% — filters out small text strokes while keeping structural lines
+const MIN_SEG_RATIO = 0.01;
+
+// Angle dedup tolerance in degrees — lines within this angle AND position are considered duplicates
+const ANGLE_DEDUP_DEG = 1.0;
+// Position dedup tolerance as fraction of bbox diagonal
+const POS_DEDUP_RATIO = 0.02;
+
+/**
+ * Compute normalized angle (0–180°) of a line for deduplication.
+ * We use 0–180 range because a line from A→B and B→A are the same line.
+ */
+function lineAngleDeg(x1, y1, x2, y2) {
+  let angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+  if (angle < 0) angle += 180;
+  if (angle >= 180) angle -= 180;
+  return angle;
+}
+
+/**
+ * Compute signed perpendicular distance from the origin to the line.
+ * This distinguishes parallel lines at different positions.
+ */
+function linePerpendicularOffset(x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 1e-9) return 0;
+  // Signed distance from origin to the line: (x1*dy - y1*dx) / len
+  return (x1 * dy - y1 * dx) / len;
+}
+
+/**
+ * Dedup lines by angle + position: two lines are duplicates only if they have
+ * both similar angle AND similar perpendicular offset (i.e., they represent the
+ * same extended line). Parallel lines at different positions are preserved.
+ */
+function deduplicateByAngleAndPosition(lines, toleranceDeg, posTolerance) {
+  if (lines.length === 0) return lines;
+
+  // Sort by segLen descending so the first encountered in each bucket is the longest
+  const sorted = [...lines].sort((a, b) => (b._segLen || 0) - (a._segLen || 0));
+  const kept = [];
+  const usedKeys = []; // { angle, offset }
+
+  for (const line of sorted) {
+    const angle = lineAngleDeg(line.x1, line.y1, line.x2, line.y2);
+    const offset = linePerpendicularOffset(line.x1, line.y1, line.x2, line.y2);
+
+    const isDuplicate = usedKeys.some(k => {
+      const angleDiff = Math.abs(k.angle - angle);
+      const angleClose = angleDiff < toleranceDeg || angleDiff > (180 - toleranceDeg);
+      const posClose = Math.abs(k.offset - offset) < posTolerance;
+      return angleClose && posClose;
+    });
+
+    if (!isDuplicate) {
+      usedKeys.push({ angle, offset });
+      kept.push(line);
+    }
+  }
+
+  return kept;
+}
+
 function getGeometricGuides(paths, bbox, mode, toleranceMult = 1.0, shouldDedup = true) {
   const lines = [];
   const circles = [];
   const lineKeys = new Set();
   const circleKeys = new Set();
+
+  const minLen = bbox.width * MIN_SEG_RATIO;
 
   for (const path of paths) {
     const pts = path.points;
@@ -21,6 +93,12 @@ function getGeometricGuides(paths, bbox, mode, toleranceMult = 1.0, shouldDedup 
       if (!path.closed && i === n - 1) break;
       const pt1 = pts[i];
       const pt2 = pts[(i + 1) % n];
+
+      // Skip short segments to reduce noise from text strokes and small details
+      const dx = pt2.anchor[0] - pt1.anchor[0];
+      const dy = pt2.anchor[1] - pt1.anchor[1];
+      const segLen = Math.sqrt(dx * dx + dy * dy);
+      if (segLen < minLen) continue;
 
       const isStraight = isStraightSegment(pt1, pt2);
 
@@ -44,7 +122,8 @@ function getGeometricGuides(paths, bbox, mode, toleranceMult = 1.0, shouldDedup 
               y1: intersections[0][1],
               x2: intersections[1][0],
               y2: intersections[1][1],
-              role: "axis"
+              role: "axis",
+              _segLen: segLen // keep for sorting/dedup, stripped later
             });
           }
         }
@@ -82,7 +161,31 @@ function getGeometricGuides(paths, bbox, mode, toleranceMult = 1.0, shouldDedup 
     }
   }
 
-  return { lines, circles };
+  // --- Post-processing: reduce noise ---
+
+  // Compute position tolerance from bbox diagonal
+  const bboxDiag = Math.sqrt(bbox.width * bbox.width + bbox.height * bbox.height);
+  const posTolerance = bboxDiag * POS_DEDUP_RATIO;
+
+  // 1. Angle + position deduplication for lines
+  //    Lines must have BOTH similar angle AND similar position to be merged
+  let filteredLines = deduplicateByAngleAndPosition(lines, ANGLE_DEDUP_DEG, posTolerance);
+
+  // 2. Cap maximum count (keep longest segments)
+  if (filteredLines.length > MAX_LINES) {
+    filteredLines = filteredLines.slice(0, MAX_LINES);
+  }
+
+  // 3. Clean up internal properties
+  for (const l of filteredLines) { delete l._segLen; }
+
+  // 4. Cap circles (keep largest radii — most structurally significant)
+  let filteredCircles = circles;
+  if (filteredCircles.length > MAX_CIRCLES) {
+    filteredCircles = [...filteredCircles].sort((a, b) => b.r - a.r).slice(0, MAX_CIRCLES);
+  }
+
+  return { lines: filteredLines, circles: filteredCircles };
 }
 
 export function generateCandidates({ paths, bbox, strategy, constraints = {}, mockId }) {

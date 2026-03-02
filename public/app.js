@@ -122,26 +122,43 @@ if (geminiApiKeyInput) {
 
 // --- Client-side Gemini vectorization ---
 const SYSTEM_PROMPT_VECTORIZE = `
-You are an expert graphic designer and SVG coder.
-Your task is to analyze the provided logo image and convert it into a clean, precise, and well-structured SVG format.
-Output ONLY valid SVG code.
-Do not include markdown formatting or any other text (like \`\`\`svg).
-The SVG must be strictly geometric, using paths and basic shapes.
-Use a clean viewBox (e.g., "0 0 512 512" or similar based on the image proportions).
+You are an expert Senior Graphic Designer and SVG Engineering Specialist.
+Your task is to perform a high-fidelity, professional vectorization of the provided bitmap image.
+
+### OUTPUT RULES:
+1. Output ONLY the raw SVG code. 
+2. ABSOLUTELY NO Markdown formatting (no \`\`\`svg or \`\`\` blocks).
+3. Start directly with the "<svg" tag and end with "</svg>".
+4. Do not include XML declarations (e.g., <?xml...?>).
+
+### TECHNICAL REQUIREMENTS:
+1. Precision: Use a clean, logical viewBox (e.g., "0 0 512 512"). Round all coordinates to 2 decimal places for efficiency.
+2. Geometry: Prioritize basic shapes (<circle>, <rect>, <ellipse>) where applicable. For complex shapes, use optimized <path> data.
+3. Paths: Ensure all paths are closed properly. Use shorthand path commands (M, L, C, Z) to keep code concise.
+4. Colors: Extract exact Hex color codes (e.g., #FF5500) from the image. Do not use color names like "red" or "blue".
+5. Structure: Organize elements logically. Group related components using <g> tags if it improves readability.
+6. Responsiveness: Include preserveAspectRatio="xMidYMid meet" but do not hardcode width/height within the SVG tag (use viewBox only).
+
+Analyze the image structure carefully to ensure the vector output is a pixel-perfect geometric reconstruction.
 `;
 
 async function geminiVectorize(apiKey, imageBase64, mimeType) {
-  const modelName = "gemini-3.1-flash-image-preview";
+  const modelName = "gemini-3-pro-image-preview";
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   const payload = {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT_VECTORIZE }] },
     contents: [{
       parts: [
-        { text: "Convert this logo to a clean SVG following the instructions." },
+        { text: "Analyze this bitmap image and reconstruct it as a clean, scalable, and production-ready SVG. Ensure every curve is smooth and every color is accurate. Follow the system constraints for formatting." },
         { inlineData: { mimeType: mimeType || "image/jpeg", data: imageBase64 } }
       ]
-    }]
+    }],
+    generationConfig: {
+      temperature: 0.1, // 关键：低随机性确保代码逻辑严谨
+      topP: 0.95,
+      maxOutputTokens: 32768 // 针对复杂 logo 可能需要更多 token
+    }
   };
 
   let response;
@@ -401,7 +418,19 @@ function renderPreview() {
     candidateList.style.pointerEvents = pointerEventsVal;
     candidateList.style.transition = "opacity 0.2s ease";
     const labelPrefix = `<span data-i18n="guidesFieldLabel" class="text-[13px] font-medium text-[var(--color-muted)] w-16 flex-shrink-0 select-none whitespace-nowrap">${t('guidesFieldLabel')}</span>`;
-    candidateList.innerHTML = labelPrefix + state.analysis.candidates
+
+    // Sort candidates: 1. Full, 2. Curves/Circles, 3. Lines
+    const sortedCandidates = [...state.analysis.candidates].sort((a, b) => {
+      const getOrder = (label) => {
+        if (label.includes("Full")) return 1;
+        if (label.includes("Circles") || label.includes("Curves")) return 2;
+        if (label.includes("Lines")) return 3;
+        return 4;
+      };
+      return getOrder(a.label) - getOrder(b.label);
+    });
+
+    candidateList.innerHTML = labelPrefix + sortedCandidates
       .map((candidate) => {
         let shortLabel = candidate.label;
         if (shortLabel.includes("Full")) shortLabel = t('cFull');
@@ -451,7 +480,8 @@ async function analyzeSvg(svgText) {
   }
 
   state.analysis = data;
-  state.selectedCandidateId = data.bestSolution.id;
+  const fullCandidate = data.candidates?.find(c => c.label && c.label.includes("Full"));
+  state.selectedCandidateId = fullCandidate ? fullCandidate.id : data.bestSolution.id;
   setStatus(`${t('analyzed')}`);
   if (controlsWrapper) controlsWrapper.classList.remove("hidden");
   renderPreview();

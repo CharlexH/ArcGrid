@@ -1,4 +1,6 @@
 import { ApiFailure } from "../errors.mjs";
+import { sanitizeSvg } from "./sanitize.mjs";
+import { parseTransform, applyTransform, multiplyTransform } from "./transform.mjs";
 
 const PATH_TAG_REGEX = /<path\b[^>]*>/gi;
 const POLYGON_TAG_REGEX = /<polygon\b[^>]*>/gi;
@@ -143,14 +145,36 @@ function parsePathPoints(d) {
       continue;
     }
 
-    if (cmd === "S" || cmd === "Q" || cmd === "s" || cmd === "q") {
-      pushAnchor(Number(tokens[i + 2]), Number(tokens[i + 3]));
+    if (cmd === "S" || cmd === "Q") {
+      const cx1 = Number(tokens[i]);
+      const cy1 = Number(tokens[i + 1]);
+      const nx = Number(tokens[i + 2]);
+      const ny = Number(tokens[i + 3]);
+      // For S/Q we simplify by using the provided control point as BOTH handles for ArcGrid's Bezier logic
+      // This ensures they are recognized as "Curved" segments
+      pushAnchor(nx, ny, { x: cx1, y: cy1 }, { x: cx1, y: cy1 });
+      i += 4;
+      continue;
+    }
+
+    if (cmd === "s" || cmd === "q") {
+      const cx1 = x + Number(tokens[i]);
+      const cy1 = y + Number(tokens[i + 1]);
+      const nx = x + Number(tokens[i + 2]);
+      const ny = y + Number(tokens[i + 3]);
+      pushAnchor(nx, ny, { x: cx1, y: cy1 }, { x: cx1, y: cy1 });
       i += 4;
       continue;
     }
 
     if (cmd === "A" || cmd === "a") {
-      pushAnchor(Number(tokens[i + 5]), Number(tokens[i + 6]));
+      const nx = (cmd === "A") ? Number(tokens[i + 5]) : x + Number(tokens[i + 5]);
+      const ny = (cmd === "A") ? Number(tokens[i + 6]) : y + Number(tokens[i + 6]);
+      // Arcs are complex to approximate. To prevent them being "Straight", 
+      // we provide a handle that is slightly offset from the diagonal.
+      const hx = (x + nx) / 2 + 1e-4;
+      const hy = (y + ny) / 2 + 1e-4;
+      pushAnchor(nx, ny, { x: hx, y: hy }, { x: hx, y: hy });
       i += 7;
       continue;
     }
@@ -275,32 +299,7 @@ function parseEllipses(svgText, startIndex) {
 }
 
 function parseLines(svgText, startIndex) {
-  const results = [];
-  let index = startIndex;
-  let match;
-
-  while ((match = LINE_TAG_REGEX.exec(svgText)) !== null) {
-    const tag = match[0];
-    const x1 = parseNumber(extractAttr(tag, "x1"), 0);
-    const y1 = parseNumber(extractAttr(tag, "y1"), 0);
-    const x2 = parseNumber(extractAttr(tag, "x2"), 0);
-    const y2 = parseNumber(extractAttr(tag, "y2"), 0);
-
-    if (x1 === x2 && y1 === y2) continue;
-
-    results.push({
-      id: `line_${index}`,
-      d: "",
-      points: [
-        { anchor: [x1, y1], leftDirection: [x1, y1], rightDirection: [x1, y1] },
-        { anchor: [x2, y2], leftDirection: [x2, y2], rightDirection: [x2, y2] },
-      ],
-      closed: false,
-    });
-    index += 1;
-  }
-
-  return { items: results, nextIndex: index };
+  // Moved to be parsed inline
 }
 
 export function parseSvg(svgText) {
@@ -308,56 +307,162 @@ export function parseSvg(svgText) {
     throw new ApiFailure(400, "INVALID_SVG", "SVG payload is missing or invalid.");
   }
 
+  // Preprocess and optimize SVG string
+  const optimizedSvg = sanitizeSvg(svgText);
+
   // Strip non-rendering containers so their children aren't matched as geometry
-  const cleanedSvg = svgText
+  const cleanedSvg = optimizedSvg
     .replace(/<defs[\s\S]*?<\/defs>/gi, "")
     .replace(/<clipPath[\s\S]*?<\/clipPath>/gi, "");
 
   const paths = [];
   let index = 1;
+
+  // Transform stack
+  const ctmStack = [[1, 0, 0, 1, 0, 0]]; // Start with identity matrix
+  let currentCtm = ctmStack[0];
+
+  // We need to parse tags in order to build the hierarchical CTM
+  const TAG_REGEX = /<(\/?)(g|path|polygon|polyline|rect|circle|ellipse|line)\b([^>]*)>/gi;
   let match;
 
-  while ((match = PATH_TAG_REGEX.exec(cleanedSvg)) !== null) {
-    const tag = match[0];
-    const d = extractAttr(tag, "d");
-    if (!d) continue;
+  while ((match = TAG_REGEX.exec(cleanedSvg)) !== null) {
+    const isClosing = match[1] === "/";
+    const tagName = match[2].toLowerCase();
+    const tagContent = match[0];
+    const isSelfClosing = tagContent.endsWith("/>");
 
-    const points = parsePathPoints(d);
-    const closed = /z\s*$/i.test(d.trim());
+    if (isClosing) {
+      if (tagName === "g" && ctmStack.length > 1) {
+        ctmStack.pop();
+        currentCtm = ctmStack[ctmStack.length - 1];
+      }
+      continue;
+    }
 
-    if (points.length > 1) {
-      paths.push({
-        id: `path_${index}`,
-        d,
-        points,
-        closed,
-      });
-      index += 1;
+    const transformAttr = extractAttr(tagContent, "transform");
+    let nodeCtm = currentCtm;
+
+    if (transformAttr) {
+      const parsedTransform = parseTransform(transformAttr);
+      if (parsedTransform) {
+        nodeCtm = multiplyTransform(currentCtm, parsedTransform);
+      }
+    }
+
+    // Push to stack if it's a group
+    if (tagName === "g" && !isSelfClosing) {
+      ctmStack.push(nodeCtm);
+      currentCtm = nodeCtm;
+      continue;
+    }
+
+    // Apply CTM to points generated by parsers
+    const transformPoints = (points) => {
+      for (const pt of points) {
+        pt.anchor = applyTransform(pt.anchor, nodeCtm);
+        pt.leftDirection = applyTransform(pt.leftDirection, nodeCtm);
+        pt.rightDirection = applyTransform(pt.rightDirection, nodeCtm);
+      }
+    };
+
+    if (tagName === "path") {
+      const d = extractAttr(tagContent, "d");
+      if (d) {
+        const points = parsePathPoints(d);
+        if (points.length > 1) {
+          transformPoints(points);
+          paths.push({
+            id: `path_${index++}`,
+            d, // keeping raw d for legacy, though not strictly accurate after transform
+            points,
+            closed: /z\s*$/i.test(d.trim())
+          });
+        }
+      }
+    } else if (tagName === "polygon" || tagName === "polyline") {
+      const ptsAttr = extractAttr(tagContent, "points");
+      if (ptsAttr) {
+        const points = parsePointsAttr(ptsAttr);
+        if (points.length > 1) {
+          const closed = tagName === "polygon" || points.length > 2;
+          if (closed) {
+            points.push(JSON.parse(JSON.stringify(points[0])));
+          }
+          transformPoints(points);
+          paths.push({
+            id: `${tagName}_${index++}`,
+            d: "",
+            points,
+            closed
+          });
+        }
+      }
+    } else if (tagName === "rect") {
+      const x = parseNumber(extractAttr(tagContent, "x"), 0);
+      const y = parseNumber(extractAttr(tagContent, "y"), 0);
+      const width = parseNumber(extractAttr(tagContent, "width"), 0);
+      const height = parseNumber(extractAttr(tagContent, "height"), 0);
+      if (width > 0 && height > 0) {
+        const points = [
+          { anchor: [x, y], leftDirection: [x, y], rightDirection: [x, y] },
+          { anchor: [x + width, y], leftDirection: [x + width, y], rightDirection: [x + width, y] },
+          { anchor: [x + width, y + height], leftDirection: [x + width, y + height], rightDirection: [x + width, y + height] },
+          { anchor: [x, y + height], leftDirection: [x, y + height], rightDirection: [x, y + height] },
+          { anchor: [x, y], leftDirection: [x, y], rightDirection: [x, y] },
+        ];
+        transformPoints(points);
+        paths.push({ id: `rect_${index++}`, d: "", points, closed: true });
+      }
+    } else if (tagName === "circle") {
+      const cx = parseNumber(extractAttr(tagContent, "cx"), 0);
+      const cy = parseNumber(extractAttr(tagContent, "cy"), 0);
+      const r = parseNumber(extractAttr(tagContent, "r"), 0);
+      if (r > 0) {
+        const k = 0.552284749831 * r;
+        const points = [
+          { anchor: [cx, cy - r], leftDirection: [cx - k, cy - r], rightDirection: [cx + k, cy - r] },
+          { anchor: [cx + r, cy], leftDirection: [cx + r, cy - k], rightDirection: [cx + r, cy + k] },
+          { anchor: [cx, cy + r], leftDirection: [cx + k, cy + r], rightDirection: [cx - k, cy + r] },
+          { anchor: [cx - r, cy], leftDirection: [cx - r, cy + k], rightDirection: [cx - r, cy - k] },
+          { anchor: [cx, cy - r], leftDirection: [cx - k, cy - r], rightDirection: [cx + k, cy - r] },
+        ];
+        transformPoints(points);
+        paths.push({ id: `circle_${index++}`, d: "", points, closed: true });
+      }
+    } else if (tagName === "ellipse") {
+      const cx = parseNumber(extractAttr(tagContent, "cx"), 0);
+      const cy = parseNumber(extractAttr(tagContent, "cy"), 0);
+      const rx = parseNumber(extractAttr(tagContent, "rx"), 0);
+      const ry = parseNumber(extractAttr(tagContent, "ry"), 0);
+      if (rx > 0 && ry > 0) {
+        const kx = 0.552284749831 * rx;
+        const ky = 0.552284749831 * ry;
+        const points = [
+          { anchor: [cx, cy - ry], leftDirection: [cx - kx, cy - ry], rightDirection: [cx + kx, cy - ry] },
+          { anchor: [cx + rx, cy], leftDirection: [cx + rx, cy - ky], rightDirection: [cx + rx, cy + ky] },
+          { anchor: [cx, cy + ry], leftDirection: [cx + kx, cy + ry], rightDirection: [cx - kx, cy + ry] },
+          { anchor: [cx - rx, cy], leftDirection: [cx - rx, cy + ky], rightDirection: [cx - rx, cy - ky] },
+          { anchor: [cx, cy - ry], leftDirection: [cx - kx, cy - ry], rightDirection: [cx + kx, cy - ry] },
+        ];
+        transformPoints(points);
+        paths.push({ id: `ellipse_${index++}`, d: "", points, closed: true });
+      }
+    } else if (tagName === "line") {
+      const x1 = parseNumber(extractAttr(tagContent, "x1"), 0);
+      const y1 = parseNumber(extractAttr(tagContent, "y1"), 0);
+      const x2 = parseNumber(extractAttr(tagContent, "x2"), 0);
+      const y2 = parseNumber(extractAttr(tagContent, "y2"), 0);
+      if (x1 !== x2 || y1 !== y2) {
+        const points = [
+          { anchor: [x1, y1], leftDirection: [x1, y1], rightDirection: [x1, y1] },
+          { anchor: [x2, y2], leftDirection: [x2, y2], rightDirection: [x2, y2] },
+        ];
+        transformPoints(points);
+        paths.push({ id: `line_${index++}`, d: "", points, closed: false });
+      }
     }
   }
-
-  const polygon = parsePolygonLike(cleanedSvg, POLYGON_TAG_REGEX, true, "polygon", index);
-  paths.push(...polygon.items);
-  index = polygon.nextIndex;
-
-  const polyline = parsePolygonLike(cleanedSvg, POLYLINE_TAG_REGEX, false, "polyline", index);
-  paths.push(...polyline.items);
-  index = polyline.nextIndex;
-
-  const rects = parseRectangles(cleanedSvg, index);
-  paths.push(...rects.items);
-  index = rects.nextIndex;
-
-  const circles = parseCircles(cleanedSvg, index);
-  paths.push(...circles.items);
-  index = circles.nextIndex;
-
-  const ellipses = parseEllipses(cleanedSvg, index);
-  paths.push(...ellipses.items);
-  index = ellipses.nextIndex;
-
-  const lines = parseLines(cleanedSvg, index);
-  paths.push(...lines.items);
 
   if (paths.length === 0) {
     throw new ApiFailure(400, "INVALID_SVG", "No supported geometry found in SVG.");
