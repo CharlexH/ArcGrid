@@ -10,8 +10,10 @@
 </head>
 
 <body>
-  <div class="w-[min(1200px,calc(100%-48px))] mx-auto my-6 grid min-[800px]:grid-layout-main gap-6">
-    <section class="bg-[var(--color-panel)] border border-[var(--color-line)] rounded-2xl p-6 flex flex-col gap-4">
+  <div
+    class="w-[calc(100%-48px)] mx-auto my-6 grid min-[800px]:grid-layout-main gap-6 items-stretch min-h-[calc(100vh-48px)]">
+    <section
+      class="bg-[var(--color-panel)] border border-[var(--color-line)] rounded-2xl p-4 flex flex-col gap-4 shadow-sm h-full">
       <div class="flex justify-between items-center">
         <div class="flex gap-2 items-center">
           <img src="/logo.png" alt="ArcGrid" class="w-8 h-8 flex-shrink-0 rounded-lg">
@@ -44,7 +46,7 @@
           </label>
         </div>
         <textarea id="svgInput"
-          class="w-full h-20 rounded-lg border border-[var(--color-line)] p-2 px-3 font-mono text-[12px] bg-[#fafafa] text-[var(--color-ink)] transition-all duration-200 outline-none resize-none overflow-y-auto leading-relaxed focus:border-accent focus:bg-white focus:ring focus:ring-accent/15"
+          class="w-full h-[88px] rounded-lg border border-[var(--color-line)] p-2 px-3 font-mono text-[12px] bg-[#fafafa] text-[var(--color-ink)] transition-all duration-200 outline-none resize-none overflow-y-auto leading-relaxed focus:border-accent focus:bg-white focus:ring focus:ring-accent/15"
           placeholder="<svg>...</svg>"></textarea>
       </div>
 
@@ -54,7 +56,7 @@
 
       <div class="flex-1"></div>
 
-      <div class="border border-blue-200 bg-blue-50 p-4 rounded-lg flex flex-col gap-4">
+      <div class="border border-blue-200 bg-blue-50 p-4 rounded-lg flex flex-col gap-2">
         <div>
           <h2 class="mb-2 text-[14px] font-semibold flex items-center gap-1.5">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -96,9 +98,9 @@
 
         <div class="relative group">
           <label id="imageUploadLabel"
-            class="border border-dashed border-blue-200 rounded-lg h-[100px] text-center bg-white/60 transition-all duration-200 relative cursor-pointer flex flex-col items-center justify-center overflow-hidden hover:border-[var(--color-accent)] hover:bg-white">
+            class="border border-dashed border-blue-200 rounded-lg h-[88px] text-center bg-white/60 transition-all duration-200 relative cursor-pointer flex flex-col items-center justify-center overflow-hidden hover:border-[var(--color-accent)] hover:bg-white">
             <div id="imageUploadContent" class="flex flex-col items-center justify-center pointer-events-none">
-              <svg class="w-6 h-6 mb-2 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none"
+              <svg class="w-6 h-6 text-[var(--color-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   d="M21 3.6V20.4C21 20.7314 20.7314 21 20.4 21H3.6C3.26863 21 3 20.7314 3 20.4V3.6C3 3.26863 3.26863 3 3.6 3H20.4C20.7314 3 21 3.26863 21 3.6Z"
@@ -108,13 +110,13 @@
                   d="M16 10C14.8954 10 14 9.10457 14 8C14 6.89543 14.8954 6 16 6C17.1046 6 18 6.89543 18 8C18 9.10457 17.1046 10 16 10Z"
                   stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
               </svg>
-              <span class="text-[var(--color-ink)] font-medium text-[14px]" data-i18n="uploadImg">Upload Image</span>
+              <span class="text-[var(--color-ink)] font-medium text-[12px]" data-i18n="uploadImg">Upload Image</span>
               <span class="text-[12px] text-[var(--color-muted)]" data-i18n="dragDrop">Drag and drop or click to
                 browse</span>
             </div>
 
             <img id="imagePreview"
-              class="absolute inset-x-0 inset-y-1 mx-auto w-auto h-[92px] object-contain hidden pointer-events-none" />
+              class="absolute inset-x-0 inset-y-1 mx-auto w-auto h-[80px] object-contain hidden pointer-events-none" />
 
             <input id="imageFile" type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" />
           </label>
@@ -134,64 +136,89 @@
           id="vectorizeBtn" data-i18n="vectorizeBtn">Vectorize Image + Analyze</button>
       </div>
 
-      <p id="status" class="mt-auto text-[12px] text-[var(--color-muted)] font-mono" data-i18n="statusReady">Ready.</p>
+      <div class="flex items-center justify-between text-[12px] text-[var(--color-muted)]">
+        <span data-i18n="copyright">© 2026 Charlex</span>
+        <a href="https://github.com/CharlexH/ArcGrid" target="_blank" rel="noopener noreferrer"
+          class="text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors" title="GitHub Repository">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+            </path>
+          </svg>
+        </a>
+      </div>
     </section>
 
-    <section
-      class="bg-[var(--color-panel)] border border-[var(--color-line)] rounded-2xl relative p-0 flex flex-col overflow-hidden min-h-[700px]">
-      <div class="p-4 flex justify-between items-center">
-        <div class="flex items-baseline gap-3">
-          <strong data-i18n="previewTitle">Preview</strong>
-          <span id="signature" class="text-[var(--color-muted)] text-[13px] font-mono"></span>
-        </div>
-        <div class="flex gap-3 mb-0">
-          <button
-            class="flex-1 cursor-pointer rounded-lg border border-[var(--color-line)] bg-[#f8f9fc] text-[var(--color-ink)] flex items-center justify-center h-[32px] px-3 font-medium text-[12px] whitespace-nowrap transition-all duration-200 hover:bg-[#f1f3f7] active:translate-y-px"
-            id="exportSvgBtn" data-i18n="exportSvg">Export
-            SVG</button>
-        </div>
-      </div>
+    <section class="relative p-0 flex flex-col h-full min-h-[700px]">
 
-      <div
-        class="relative flex-1 w-full min-h-[520px] bg-[#f8f9fa] overflow-hidden flex flex-col rounded-b-2xl border-none"
-        style="background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px;">
-        <div class="absolute top-4 left-4 right-4 flex justify-between z-10 pointer-events-none items-start">
+      <div class="relative w-full h-full flex flex-col overflow-hidden border-none">
+        <div class="absolute inset-0 z-10 pointer-events-none overflow-hidden w-full h-full">
           <div id="leftControlsGroup"
-            class="segmented-control flex-col p-0 text-[var(--color-muted)] text-[13px] pointer-events-auto"
+            class="absolute top-0 left-0 segmented-control flex-col p-0 text-[var(--color-muted)] text-[12px] pointer-events-auto shadow-sm"
             style="display:none;">
             <div id="layersControl" class="flex items-center gap-2 h-[44px] px-3">
               <span data-i18n="displayLabel"
-                class="font-medium w-16 flex-shrink-0 select-none whitespace-nowrap">显示</span>
-              <label data-i18n="layerLogo"><input id="toggleLogo" type="checkbox" checked /> logo</label>
-              <label data-i18n="layerGuides"><input id="toggleGuides" type="checkbox" checked /> guides</label>
-              <label data-i18n="layerAnnotations"><input id="toggleAnnotations" type="checkbox" checked />
-                annotations</label>
+                class="font-medium w-12 flex-shrink-0 select-none whitespace-nowrap">显示</span>
+              <div class="flex items-center gap-4">
+                <label class="flex items-center gap-1.5 cursor-pointer text-[12px] text-ink transition-colors">
+                  <div class="relative flex items-center">
+                    <input id="toggleLogo" type="checkbox" checked class="peer sr-only" />
+                    <div class="w-10 h-6 bg-line rounded-full peer-checked:bg-accent transition-colors">
+                    </div>
+                    <div
+                      class="absolute left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4">
+                    </div>
+                  </div>
+                  <span data-i18n="layerLogo">logo</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[12px] text-ink transition-colors">
+                  <div class="relative flex items-center">
+                    <input id="toggleGuides" type="checkbox" checked class="peer sr-only" />
+                    <div class="w-10 h-6 bg-line rounded-full peer-checked:bg-accent transition-colors">
+                    </div>
+                    <div
+                      class="absolute left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4">
+                    </div>
+                  </div>
+                  <span data-i18n="layerGuides">guides</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[12px] text-ink transition-colors">
+                  <div class="relative flex items-center">
+                    <input id="toggleAnnotations" type="checkbox" checked class="peer sr-only" />
+                    <div class="w-10 h-6 bg-line rounded-full peer-checked:bg-accent transition-colors">
+                    </div>
+                    <div
+                      class="absolute left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-4">
+                    </div>
+                  </div>
+                  <span data-i18n="layerAnnotations">annotations</span>
+                </label>
+              </div>
             </div>
             <div id="candidateList" class="flex items-center gap-2 h-[44px] px-3 border-t border-[var(--color-line)]">
               <span data-i18n="guidesFieldLabel"
-                class="font-medium w-16 flex-shrink-0 select-none whitespace-nowrap">参考线</span>
-              <!-- Candidates will be rendered here as radio buttons -->
+                class="font-medium w-12 flex-shrink-0 select-none whitespace-nowrap">参考线</span>
             </div>
-          </div>
-          <div id="rightControlsGroup" class="flex flex-col items-end gap-0">
             <div id="controlsWrapper"
-              class="segmented-control hidden flex-col p-0 text-[var(--color-muted)] text-[13px]">
-              <div class="flex items-center justify-between gap-4 h-[44px] px-3">
-                <span data-i18n="curve" class="font-medium">Curve</span>
-                <div class="flex items-center gap-1">
+              class="flex flex-col p-0 text-[var(--color-muted)] text-[12px] border-t border-[var(--color-line)]">
+              <div class="flex items-center gap-2 h-[44px] px-3 border-b border-line">
+                <span data-i18n="curve" class="font-medium w-12 flex-shrink-0">Lines</span>
+                <div class="flex items-center gap-1.5">
+                  <span data-i18n="curveLabel" class="font-medium">Curve</span>
                   <input type="color" id="circleColor" class="small-color" value="#0057ff" title="Curve Color" />
                   <input type="number" id="circleWeight" value="0.15" step="0.05" min="0.05"
-                    class="w-[52px] px-1 py-0.5 min-h-[24px] border border-[var(--color-line)] rounded-lg"
+                    class="w-16 px-2 py-0.5 min-h-[24px] border border-line rounded-full text-center text-[12px] bg-white text-ink focus:border-[var(--color-accent)] focus:ring focus:ring-[rgba(94,106,210,0.15)] outline-none"
                     title="Curve Weight" />
-                  <span data-i18n="line" class="ml-1.5 font-medium">Line</span>
+                  <span data-i18n="line" class="ml-2 font-medium">Line</span>
                   <input type="color" id="lineColor" class="small-color" value="#ff6d00" title="Line Color" />
                   <input type="number" id="lineWeight" value="0.15" step="0.05" min="0.05"
-                    class="w-[52px] px-1 py-0.5 min-h-[24px] border border-[var(--color-line)] rounded-lg"
+                    class="w-16 px-2 py-0.5 min-h-[24px] border border-line rounded-full text-center text-[12px] bg-white text-ink focus:border-[var(--color-accent)] focus:ring focus:ring-[rgba(94,106,210,0.15)] outline-none"
                     title="Line Weight" />
                 </div>
               </div>
-              <div class="flex items-center justify-between gap-4 h-[44px] px-3 border-t border-[var(--color-line)]">
-                <span data-i18n="tolerance">Tolerance</span>
+              <div class="flex items-center justify-between gap-4 h-[44px] px-3">
+                <span data-i18n="tolerance" class="font-medium w-12 flex-shrink-0">Tolerance</span>
                 <div class="flex-1 flex items-center gap-[6px]">
                   <input type="range" id="toleranceRange" min="0.1" max="10" step="0.1" value="2.5" class="flex-1"
                     title="Tolerance Multiplier" />
@@ -200,10 +227,28 @@
               </div>
             </div>
           </div>
+          <div id="rightControlsGroup" class="absolute top-0 right-0 flex flex-col items-end gap-0 pointer-events-auto"
+            style="display:none;">
+            <div class="segmented-control flex items-center gap-3 p-1 shadow-sm">
+              <div class="flex items-baseline gap-2 px-2">
+                <strong data-i18n="previewTitle"
+                  class="text-[13px] font-semibold text-[var(--color-ink)]">Preview</strong>
+                <span id="signature" class="text-[var(--color-muted)] text-[12px] font-mono"></span>
+              </div>
+              <button
+                class="cursor-pointer rounded-lg border border-[var(--color-line)] bg-[#f8f9fc] text-[var(--color-ink)] flex items-center justify-center h-[32px] px-3 font-medium text-[12px] whitespace-nowrap transition-all duration-200 hover:bg-[#f1f3f7] active:translate-y-px"
+                id="exportSvgBtn" data-i18n="exportSvg">Export SVG</button>
+            </div>
+          </div>
+          <div id="logOverlay"
+            class="absolute bottom-0 left-0 z-10 pointer-events-none flex flex-col justify-end items-start gap-1.5 overflow-visible w-[300px] h-auto">
+          </div>
+          <div id="analysisOverlay"
+            class="absolute bottom-0 right-0 z-10 pointer-events-none flex flex-col items-end text-right gap-1.5 text-[11px] font-mono text-[var(--color-muted)] whitespace-pre"
+            style="display:none;"></div>
         </div>
-
-        <div id="svgCanvas" class="flex-1 w-full grid place-items-center overflow-auto pt-[60px]">
-          <span class="text-[#98a2ad]">No analysis yet.</span>
+        <div id="svgCanvas" class="relative items-center justify-center flex-1 flex w-full h-full overflow-visible">
+          <span class="text-[#98a2ad]" style="display:none;">No analysis yet.</span>
         </div>
       </div>
     </section>

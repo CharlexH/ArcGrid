@@ -20,7 +20,8 @@ const i18n = {
     layerLogo: "logo",
     layerGuides: "guides",
     layerAnnotations: "annotations",
-    curve: "Curve",
+    curve: "Lines",
+    curveLabel: "Curve",
     line: "Line",
     tolerance: "Tolerance",
     statusReady: "Ready.",
@@ -40,7 +41,7 @@ const i18n = {
     cFull: "Full",
     cCurves: "Curves",
     cLines: "Lines",
-    copyright: "© 2024 Charlex"
+    copyright: "© 2026 Charlex"
   },
   zh: {
     title: "ArcGrid",
@@ -63,7 +64,8 @@ const i18n = {
     layerLogo: "图标",
     layerGuides: "参考线",
     layerAnnotations: "标注",
-    curve: "曲线",
+    curve: "线条",
+    curveLabel: "曲线",
     line: "直线",
     tolerance: "容差",
     statusReady: "就绪。",
@@ -83,7 +85,7 @@ const i18n = {
     cFull: "全部",
     cCurves: "曲线",
     cLines: "直线",
-    copyright: "© 2024 Charlex"
+    copyright: "© 2026 Charlex"
   }
 };
 
@@ -133,6 +135,30 @@ if (geminiModelSelect) {
     localStorage.setItem("arcgrid_gemini_model", geminiModelSelect.value);
   });
 }
+
+function updateLangSwitchers() {
+  document.querySelectorAll('.lang-switcher').forEach(container => {
+    let pill = container.querySelector('.lang-switcher-pill');
+    if (!pill) {
+      pill = document.createElement('div');
+      pill.className = 'lang-switcher-pill';
+      container.prepend(pill);
+    }
+    const checkedInput = container.querySelector('input[type="radio"]:checked');
+    if (checkedInput) {
+      const label = checkedInput.closest('label');
+      if (label && label.offsetWidth > 0) {
+        pill.style.width = label.offsetWidth + 'px';
+        // Calculate offset relative to the container
+        const containerRect = container.getBoundingClientRect();
+        const labelRect = label.getBoundingClientRect();
+        const offsetLeft = labelRect.left - containerRect.left;
+        pill.style.left = offsetLeft + 'px';
+      }
+    }
+  });
+}
+window.addEventListener('resize', updateLangSwitchers);
 
 // --- Client-side Gemini vectorization ---
 const SYSTEM_PROMPT_VECTORIZE = `
@@ -215,7 +241,7 @@ async function geminiVectorize(apiKey, modelName, imageBase64, mimeType) {
 }
 const exportSvgBtn = document.querySelector("#exportSvgBtn");
 const signatureEl = document.querySelector("#signature");
-const statusEl = document.querySelector("#status");
+const logOverlay = document.querySelector("#logOverlay");
 const svgCanvas = document.querySelector("#svgCanvas");
 const strategySelect = document.querySelector("#strategy");
 const candidateList = document.querySelector("#candidateList");
@@ -253,13 +279,10 @@ function updateUI() {
     }
   }
 
-  if (statusEl.textContent === i18n['en'].statusReady || statusEl.textContent === i18n['zh'].statusReady) {
-    statusEl.textContent = t('statusReady');
-  } else if (statusEl.textContent === i18n['en'].copyright || statusEl.textContent === i18n['zh'].copyright) {
-    statusEl.textContent = t('copyright');
-  }
+  // Remove status text updates as logs are now append-based
 
   if (state.analysis) renderPreview();
+  requestAnimationFrame(updateLangSwitchers);
 }
 
 document.querySelectorAll('input[name="lang"]').forEach(radio => {
@@ -270,7 +293,14 @@ document.querySelectorAll('input[name="lang"]').forEach(radio => {
 });
 
 function setStatus(text) {
-  statusEl.textContent = text;
+  if (!logOverlay) return;
+  const logItem = document.createElement("div");
+  logItem.className = "text-[12px] text-[var(--color-muted)] font-mono whitespace-pre-wrap";
+  logItem.textContent = text;
+  logOverlay.appendChild(logItem);
+  if (logOverlay.children.length > 5) {
+    logOverlay.removeChild(logOverlay.firstChild);
+  }
 }
 
 function selectedLayers() {
@@ -344,9 +374,15 @@ function renderPreview() {
     svgCanvas.innerHTML = `<span style="color: #98a2ad">${t('noAnalysis')}</span>`;
     signatureEl.textContent = "";
     if (leftControlsGroup) leftControlsGroup.style.display = "none";
+    const rightControlsGroup = document.querySelector("#rightControlsGroup");
+    if (rightControlsGroup) rightControlsGroup.style.display = "none";
+    const analysisOverlay = document.querySelector("#analysisOverlay");
+    if (analysisOverlay) analysisOverlay.style.display = "none";
     return;
   }
   if (leftControlsGroup) leftControlsGroup.style.display = "flex";
+  const rightControlsGroup = document.querySelector("#rightControlsGroup");
+  if (rightControlsGroup) rightControlsGroup.style.display = "flex";
 
   const layerSet = new Set(selectedLayers());
   const { bbox } = state.analysis.input;
@@ -401,19 +437,24 @@ function renderPreview() {
       .join("\n")
     : "";
 
-  const offsetX = fwA * 1.5;
-  const offsetY = fwA * 0.5;
-  const annotationLayer = layerSet.has("annotations")
-    ? `<text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 1.5 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">${state.analysis.signature}</text>
-       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 3 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">Score: ${candidate.metrics.finalScore.toFixed(2)} (Fit: ${candidate.metrics.fitError.toFixed(2)} | Sym: ${candidate.metrics.symmetryScore.toFixed(2)})</text>
-       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 4.5 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">Elements: ${candidate.lines.length} Lines, ${candidate.circles.length} Curves</text>
-       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 6 + offsetY}" fill="#222" font-family="monospace" font-size="${fwA}">Strategy: ${state.analysis.strategy}</text>`
-    : "";
+  const analysisOverlay = document.querySelector("#analysisOverlay");
+  if (analysisOverlay) {
+    if (layerSet.has("annotations")) {
+      analysisOverlay.style.display = "flex";
+      // Ensure we display GEOMETRIC_SOLVER=...
+      const sigText = state.analysis.signature.includes('=') ? state.analysis.signature : `GEOMETRIC_SOLVER=${state.analysis.signature}`;
+      analysisOverlay.innerHTML = `<div>${sigText}</div>
+<div>Score: ${candidate.metrics.finalScore.toFixed(2)} (Fit: ${candidate.metrics.fitError.toFixed(2)} | Sym: ${candidate.metrics.symmetryScore.toFixed(2)})</div>
+<div>Elements: ${candidate.lines.length} Lines, ${candidate.circles.length} Curves</div>
+<div>Strategy: ${state.analysis.strategy}</div>`;
+    } else {
+      analysisOverlay.style.display = "none";
+    }
+  }
 
   const padX = bbox.width * 0.2;
   const padY = bbox.height * 0.2;
-  // Adjusted viewBox height to accommodate for shifted annotations and extra lines
-  svgCanvas.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2 + fwA * 8}" style="width: 100%; max-height: 560px;">\n${logoLayer}\n${guideCircles}\n${guideLines}\n${annotationLayer}\n</svg>`;
+  svgCanvas.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2}" style="max-width: 560px; max-height: 560px; overflow: visible;">\n${logoLayer}\n${guideCircles}\n${guideLines}\n</svg>`;
 
   animateGrowth();
 
@@ -434,7 +475,7 @@ function renderPreview() {
     candidateList.style.opacity = opacityVal;
     candidateList.style.pointerEvents = pointerEventsVal;
     candidateList.style.transition = "opacity 0.2s ease";
-    const labelPrefix = `<span data-i18n="guidesFieldLabel" class="text-[13px] font-medium text-[var(--color-muted)] w-16 flex-shrink-0 select-none whitespace-nowrap">${t('guidesFieldLabel')}</span>`;
+    const labelPrefix = `<span data-i18n="guidesFieldLabel" class="text-[12px] font-medium text-[var(--color-muted)] w-12 flex-shrink-0 select-none whitespace-nowrap">${t('guidesFieldLabel')}</span>`;
 
     // Sort candidates: 1. Full, 2. Curves/Circles, 3. Lines
     const sortedCandidates = [...state.analysis.candidates].sort((a, b) => {
@@ -447,7 +488,7 @@ function renderPreview() {
       return getOrder(a.label) - getOrder(b.label);
     });
 
-    candidateList.innerHTML = labelPrefix + sortedCandidates
+    const radioGroupHtml = `<div class="lang-switcher w-auto">` + sortedCandidates
       .map((candidate) => {
         let shortLabel = candidate.label;
         if (shortLabel.includes("Full")) shortLabel = t('cFull');
@@ -457,7 +498,9 @@ function renderPreview() {
         const checked = candidate.id === state.selectedCandidateId ? "checked" : "";
         return `<label><input type="radio" name="candidate" value="${candidate.id}" ${checked} /> ${shortLabel}</label>`;
       })
-      .join("");
+      .join("") + `</div>`;
+
+    candidateList.innerHTML = labelPrefix + radioGroupHtml;
 
     candidateList.querySelectorAll("input[type='radio']").forEach((radio) => {
       radio.addEventListener("change", (e) => {
@@ -467,6 +510,8 @@ function renderPreview() {
         }
       });
     });
+    // Wait for DOM layout to complete before calculating widths for the animation pill
+    setTimeout(updateLangSwitchers, 50);
   } else {
     candidateList.style.display = "none";
     candidateList.innerHTML = "";
@@ -738,7 +783,7 @@ if (toleranceRange && toleranceVal) {
 }
 
 svgInput.value = MOCK_FALLBACK_SVG;
-setStatus(t('copyright'));
+setStatus(t('statusReady'));
 updateUI();
 
 // Auto-generate on load
