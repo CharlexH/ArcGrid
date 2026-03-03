@@ -99,6 +99,18 @@ function t(key, ...args) {
   return str;
 }
 
+// Helper for dynamic API URLs supporting subpath deployments
+const getApiUrl = (endpoint) => {
+  let base = window.location.pathname;
+  if (base.endsWith('/index.html')) {
+    base = base.slice(0, -11);
+  }
+  if (!base.endsWith('/')) {
+    base += '/';
+  }
+  return base + endpoint.replace(/^\//, '');
+};
+
 const state = {
   analysis: null,
   selectedCandidateId: null,
@@ -523,7 +535,7 @@ async function analyzeSvg(svgText) {
   const toleranceInput = document.querySelector("#toleranceRange");
   const toleranceMult = toleranceInput ? parseFloat(toleranceInput.value) : 2.5;
 
-  const response = await fetch("/api/v1/logo/analyze", {
+  const response = await fetch(getApiUrl("/api/v1/logo/analyze"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -713,7 +725,7 @@ async function exportResult(format) {
 
   const rawSvg = svgInput.value.trim() || MOCK_FALLBACK_SVG;
 
-  const response = await fetch("/api/v1/logo/export", {
+  const response = await fetch(getApiUrl("/api/v1/logo/export"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
