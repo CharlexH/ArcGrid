@@ -10,7 +10,7 @@
 
 **ArcGrid** 是一款用于生成**图标比例绘图和辅助线**的 Web 应用原型，可自动为设计作品提取并标注专业的几何制图规范。
 
-**✨ 在线体验:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
+**✨ 在线体验:** [https://charlex.me/lab/arcgrid/](https://charlex.me/lab/arcgrid/)
 
 ### ✨ 功能特性
 
@@ -55,7 +55,7 @@ npm run dev
 
 **ArcGrid** is a specialized web application prototype that automates the generation of **professional construction lines and geometric annotations** for logo designs.
 
-**✨ Live Demo:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
+**✨ Live Demo:** [https://charlex.me/lab/arcgrid/](https://charlex.me/lab/arcgrid/)
 
 ### ✨ Key Features
 
