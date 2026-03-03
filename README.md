@@ -1,139 +1,101 @@
 # ArcGrid Guide Lab 📐
 
-[中文](#中文) | [English](#english)
+[中文](#-中文) | [English](#-english)
 
 ---
 
 ![ArcGrid Preview](public/arcgrid_preview.webp)
 
-## 中文
+## 🇨🇳 中文
 
-**ArcGrid** 是一个用于生成图标比例绘图和辅助线的原型应用。它能够自动为图标设计生成专业的辅助线、几何标注和制图规范。
+**ArcGrid** 是一款用于生成**图标比例绘图和辅助线**的 Web 应用原型，可自动为设计作品提取并标注专业的几何制图规范。
 
 **✨ 在线体验:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
 
-### ✨ 核心功能
+### ✨ 功能特性
 
-- **双轨输入系统**:
-  - **SVG 直接输入**: 支持上传或粘贴 SVG 代码，直接对现有矢量形状进行分析。优化了 UI 布局，操作更加便捷。
-  - **AI 图像矢量化**: (实验性) 使用 Gemini AI 将位图 (PNG/JPG) 转换为 SVG，随后进入分析流程。新增上传图像预览与删除功能。
-- **智能几何分析**:
-  - 自动识别圆形、圆弧和对齐线，生成多种“候选”辅助线方案。更优的默认视图，现默认展示所有参考线。
-  - **强大的 SVG 处理**: 自动处理描边到填充的转换，保留镂空效果，智能剔除非渲染内容 `<defs>`。近期修复并增强了具有复杂变换矩阵的 SVG 解析及辅助线对齐问题。
-- **交互式自定义与可视化**:
-  - 可动态切换 Logo 层、辅助线层和标注层的显示。
-  - **动态容差调整**: 使用滑块实时微调几何特征检测的灵敏度。
-  - **生动的生长动画**: 在渲染 SVG 时提供视觉上极具吸引力的线条动态绘制效果。
-  - 实时调整辅助线的颜色和粗细（曲线 vs 直线）。
-  - 在多个分析候选方案中切换，寻找最精准的几何匹配。
-- **专业导出**: 支持将生成的制图规范导出为高质量的 **SVG** 或 **PDF** 格式。
+- 🔄 **双轨输入系统** - 支持直接粘贴/上传 SVG，或通过 Gemini AI 将图像 (PNG/JPG) 一键智能矢量化
+- 🧠 **智能几何分析** - 自动识别图形特征，生成精确的圆、圆弧和对齐线计算方案
+- 🛠️ **强悍的 SVG 解析** - 自动转换描边为填充、过滤冗余元素并完美应对复杂的变换矩阵
+- 🎨 **精细化交互体验** - 实时动态调整检测容差，支持图层切换以及辅线颜色、粗细的自定义
+- ✨ **动感可视化** - 渲染过程自带优美的辅助线生长动画
+- 📥 **高质量规格导出** - 一键将生成的制图规范及网格导出为 SVG 或 PDF 格式
 
 ### 🚀 快速上手
 
-#### 环境准备
-
-- Node.js (v18+)
-- npm
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (可选，用于 Cloudflare 部署)
-
-#### 安装步骤
-
 ```bash
-# 克隆仓库
+# 克隆仓库并安装依赖
 git clone <repository-url>
 cd ArcGrid
-
-# 安装依赖
 npm install
-```
 
-#### 启动应用
-
-```bash
-# 启动开发服务器 (同时运行 Tailwind CLI 和 Wrangler Pages dev)
+# 启动开发服务器 (自动运行 Tailwind & Wrangler)
 npm run dev
 ```
 
-访问 `http://localhost:8788` 即可开始使用。
+> 访问 `http://localhost:8788` 即可开始使用。
 
 ### ⚙️ API 配置
 
-无需配置环境变量。您可以直接在网页的设置面板中输入您的 **Gemini API Key**。应用现已支持预选最新的 **gemini-3.1-flash-image-preview** 与 **gemini-2.5-flash-image** 视觉模型。您的 API Key 将被安全地保存在浏览器的本地存储 (Local Storage) 中。
+完全**免环境配置**。直接在网页设置面板输入 **Gemini API Key** 即可启用 AI 视觉功能：
 
-*注意：Gemini API 仅在使用实验性的“图像转 SVG”功能时需要。*
+- 原生支持 **gemini-3.1-flash-image-preview** 及 **gemini-2.5-flash-image**
+- 密钥安全存储于浏览器本地 (Local Storage)
+- *(注：仅在使用“图像转 SVG”实验性功能时需要配置)*
 
-### 🛠 技术栈
+### 🔧 技术栈
 
-- **前端**: 原生 HTML5, Tailwind CSS, JavaScript (ES Modules)。
-- **后端 / 部署**: Cloudflare Pages Functions (Hono.js)。
-- **AI 集成**: 接入 Google Gemini API 进行图像分析与矢量化。
+- **前端** - 原生 HTML5 / Tailwind CSS / ES Modules
+- **后端** - Cloudflare Pages Functions (Hono.js)
+- **大语言模型** - Google Gemini API
 
 ---
 
-## English
+## 🇺🇸 English
 
-**ArcGrid** is a specialized web application prototype designed for generating manual-style logo construction guides. It automates the process of creating professional construction lines and geometric annotations for logo designs.
+**ArcGrid** is a specialized web application prototype that automates the generation of **professional construction lines and geometric annotations** for logo designs.
 
 **✨ Live Demo:** [https://arcgrid.pages.dev/](https://arcgrid.pages.dev/)
 
 ### ✨ Key Features
 
-- **Double-Track Input System**:
-  - **SVG Direct Input**: Upload or paste SVG code to analyze existing vector shapes, featuring an optimized, compact UI layout.
-  - **AI Image Vectorization**: (Experimental) Convert raster images (PNG/JPG) to SVG using Gemini AI before running the construction analysis. Now supports image preview and deletion capabilities.
-- **Intelligent Geometry Analysis**:
-  - Automatically detects circles, arcs, and alignment lines to create "Candidate" construction guides. Reference lines are now displayed by default for better clarity.
-  - **Robust SVG Processing**: Automatically handles stroke-to-fill conversions, preserves hollow effects, and ignores non-renderable `<defs>`. Enhanced with recent bug fixes for complex transformation matrices resulting in accurate SVG parsing and precise reference line alignment.
-- **Interactive Customization & Visualization**:
-  - Toggle visibility for the logo, guides, and annotations.
-  - **Adjustable Analysis Tolerance**: Fine-tune geometry detection sensitivity in real-time using the tolerance slider.
-  - **Dynamic Growth Animation**: Visually engaging animated line-drawing effect during SVG rendering.
-  - Adjust guide line colors and weights (Curve vs. Line) in real-time.
-  - Switch between multiple analysis candidates to find the best geometric fit.
-- **Professional Export**: Export your finalized construction guide as high-quality **SVG** or **PDF**.
+- 🔄 **Double-Track Input** - Directly paste/upload SVGs, or use Gemini AI to automatically vectorize raster images (PNG/JPG).
+- 🧠 **Intelligent Analysis** - Automatically detects circles, arcs, and alignment lines to create precise construction candidates.
+- 🛠️ **Robust SVG Processing** - Handles stroke-to-fill conversions, ignores non-renderable `<defs>`, and tackles complex transformations.
+- 🎨 **Interactive UI** - Real-time tolerance adjustment, visibility toggles for layers, and customizable guide colors/weights.
+- ✨ **Stunning Visuals** - Features an engaging animated line-drawing effect during validation and rendering.
+- 📥 **Professional Export** - Export your customized construction guides as high-quality SVGs or PDFs natively.
 
 ### 🚀 Getting Started
 
-#### Prerequisites
-
-- Node.js (v18+)
-- npm
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (Optional, for Cloudflare deployment)
-
-#### Installation
-
 ```bash
-# Clone the repository
+# Clone the repo and install dependencies
 git clone <repository-url>
 cd ArcGrid
-
-# Install dependencies
 npm install
-```
 
-#### Running the App
-
-```bash
-# Start the development server (runs Tailwind CLI + Wrangler Pages dev)
+# Start the development server
 npm run dev
 ```
 
-The application will be available at `http://localhost:8788`.
+> The application will be running at `http://localhost:8788`.
 
 ### ⚙️ API Configuration
 
-No environment variables are required. You can directly input your **Gemini API Key** within the settings panel on the webpage. Multiple model options are available, including the latest **gemini-3.1-flash-image-preview** and **gemini-2.5-flash-image**. Your API key will be securely saved in your browser's local storage.
+No `.env` required. Input your **Gemini API Key** directly in the web settings panel:
 
-*Note: The Gemini API is required for the experimental image-to-svg vectorization feature.*
+- Native support for **gemini-3.1-flash-image-preview** and **gemini-2.5-flash-image**.
+- Keys are securely stored in your browser's local storage.
+- *(Note: Gemini API is only required for the experimental Image-to-SVG vectorization feature).*
 
-### 🛠 Tech Stack
+### 🔧 Tech Stack
 
-- **Frontend**: Vanilla HTML5, Tailwind CSS, JavaScript (ES Modules).
-- **Backend / Hosting**: Cloudflare Pages Functions (Hono.js).
-- **AI Integration**: Google Gemini API for image analysis and vectorization.
+- **Frontend** - Vanilla HTML5 / Tailwind CSS / ES Modules
+- **Backend / Hosting** - Cloudflare Pages Functions (Hono.js)
+- **AI Integration** - Google Gemini API
 
 ---
 
-## 📄 License
+## 📄 许可证 / License
 
-MIT
+[MIT](LICENSE)
