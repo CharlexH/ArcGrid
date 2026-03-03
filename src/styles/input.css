@@ -4,7 +4,7 @@
   --color-bg: #e4e9ee;
   --color-panel: #ffffff;
   --color-ink: #1a1b1d;
-  --color-muted: #8a8f98;
+  --color-muted: #737d90;
   --color-line: #e2e8f0;
   --color-accent: #5e6ad2;
   --color-accent-hover: #4b55c3;
@@ -20,51 +20,18 @@ body {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--color-bg);
+  background-color: #E4E9EF;
+  background-image: radial-gradient(#acbdd2 1px, transparent 1px);
+  background-size: 20px 20px;
   color: var(--color-ink);
   /* min-height: 100vh; */
 }
 
 @utility grid-layout-main {
-  grid-template-columns: minmax(240px, 320px) minmax(540px, 1fr);
+  grid-template-columns: minmax(240px, 300px) minmax(540px, 1fr);
 }
 
-/* Custom checkbox styling for a more industrial feel */
-input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 1px solid var(--color-line);
-  border-radius: 4px;
-  background: #fff;
-  position: relative;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
 
-input[type="checkbox"]:checked {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-input[type="checkbox"]:checked:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-}
-
-input[type="checkbox"]:checked::after {
-  content: "";
-  position: absolute;
-  width: 4px;
-  height: 8px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-  margin-bottom: 2px;
-}
 
 .shadow-sm {
   --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, #0000001a), 0 1px 2px -1px var(--tw-shadow-color, #0000001a)
@@ -72,58 +39,69 @@ input[type="checkbox"]:checked::after {
 
 /* Segmented control: frosted-glass overlay panel */
 .segmented-control {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(2px);
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-radius);
-  font-size: 13px;
+  border-radius: 16px;
+  font-size: 12px;
 }
 
-.segmented-control input[type="checkbox"],
-.segmented-control input[type="radio"] {
+/* Ant Design Style Solid Radio Group */
+.radio-group-solid {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--color-line);
+  overflow: hidden;
+  background: #fff;
+}
+
+.radio-group-solid label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  height: 100%;
+  font-size: 12px;
+  color: var(--color-ink);
+  cursor: pointer;
+  border-left: 1px solid var(--color-line);
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.radio-group-solid label:first-child {
+  border-left: none;
+}
+
+.radio-group-solid label:hover {
+  color: var(--color-accent);
+}
+
+.radio-group-solid label:has(input[type="radio"]:checked) {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.radio-group-solid label:has(input[type="radio"]:checked)+label {
+  border-left-color: var(--color-accent);
+}
+
+.radio-group-solid input[type="radio"] {
   display: none;
 }
 
-.segmented-control label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 10px;
-  height: 64%;
-  cursor: pointer;
-  color: var(--color-muted);
-  font-size: 13px;
-  user-select: none;
-  white-space: nowrap;
-  transition: color 0.15s ease, background 0.15s ease;
-  border-radius: 6px;
-}
 
-.segmented-control label:hover {
-  color: var(--color-ink);
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.segmented-control label:has(input:checked) {
-  color: #fff;
-  font-weight: 500;
-  background: var(--color-accent);
-}
-
-.segmented-control label:has(input:checked):hover {
-  background: var(--color-accent-hover);
-}
-
-.segmented-control label:active {
-  transform: translateY(1px);
-}
 
 /* Language switcher: pill-shaped toggle */
 .lang-switcher {
-  display: flex;
+  display: inline-flex;
+  position: relative;
   gap: 2px;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--color-line);
   border-radius: 6px;
   padding: 2px;
 }
@@ -133,6 +111,8 @@ input[type="checkbox"]:checked::after {
 }
 
 .lang-switcher label {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -151,9 +131,20 @@ input[type="checkbox"]:checked::after {
 }
 
 .lang-switcher label:has(input:checked) {
-  background: white;
+  /* Only change text color, background handles by sliding pill */
   color: var(--color-accent);
+}
+
+.lang-switcher-pill {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  background: white;
+  border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Range slider styling */
@@ -207,14 +198,55 @@ input[type="color"].small-color::-webkit-color-swatch {
 
 /* Custom Range Slider Accent Color */
 input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--color-line);
+  height: 6px;
+  border-radius: 4px;
+  outline: none;
+  border: none;
   accent-color: var(--color-accent);
   cursor: pointer;
   transition: accent-color 0.15s ease;
 }
 
+input[type="range"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
 input[type="range"]:hover,
 input[type="range"]:active {
   accent-color: var(--color-accent-hover);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:active::-webkit-slider-thumb {
+  background: var(--color-accent-hover);
+}
+
+input[type="range"]:hover::-moz-range-thumb,
+input[type="range"]:active::-moz-range-thumb {
+  background: var(--color-accent-hover);
 }
 
 /* Vectorize button loading / success states */
