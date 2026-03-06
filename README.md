@@ -29,7 +29,7 @@
 
 ```bash
 # 克隆仓库并安装依赖
-git clone <repository-url>
+git clone https://github.com/CharlexH/ArcGrid.git
 cd ArcGrid
 npm install
 
@@ -78,7 +78,7 @@ npm run dev
 
 ```bash
 # Clone the repo and install dependencies
-git clone <repository-url>
+git clone https://github.com/CharlexH/ArcGrid.git
 cd ArcGrid
 npm install
 
