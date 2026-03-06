@@ -9,6 +9,7 @@
     "dev:css": "npx @tailwindcss/cli -i ./src/styles/input.css -o ./public/style.css --watch",
     "build:css": "npx @tailwindcss/cli -i ./src/styles/input.css -o ./public/style.css --minify",
     "build": "npm run build:css",
+    "build:figma": "node figma-plugin/build.mjs",
     "lint": "node scripts/lint.mjs",
     "test": "node tests/run-tests.mjs",
     "verify:mock": "node scripts/verify-mock.mjs"
