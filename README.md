@@ -8,9 +8,13 @@
 
 ## 🇨🇳 中文
 
-**ArcGrid** 是一款用于生成**图标比例绘图和辅助线**的 Web 应用原型，可自动为设计作品提取并标注专业的几何制图规范。
+**ArcGrid** 是一款用于生成**图标比例绘图和辅助线**的设计工具，可自动为设计作品提取并标注专业的几何制图规范，现已同时提供 Web 版与 Figma 插件。
 
 **✨ 在线体验:** [https://charlex.me/lab/arcgrid/](https://charlex.me/lab/arcgrid/)
+
+**🔌 Figma 插件:** [ArcGrid - Figma Community](https://www.figma.com/community/plugin/1611785992561051368/arcgrid)
+
+> 可直接在 Figma 中选中单个 SVG 元素进行分析，并将生成的辅助线与标注重新导出回画布。
 
 ### ✨ 功能特性
 
@@ -53,9 +57,13 @@ npm run dev
 
 ## 🇺🇸 English
 
-**ArcGrid** is a specialized web application prototype that automates the generation of **professional construction lines and geometric annotations** for logo designs.
+**ArcGrid** is a design tool for generating **professional construction lines and geometric annotations** for logo designs, now available as both a web app and a Figma plugin.
 
 **✨ Live Demo:** [https://charlex.me/lab/arcgrid/](https://charlex.me/lab/arcgrid/)
+
+**🔌 Figma Plugin:** [ArcGrid - Figma Community](https://www.figma.com/community/plugin/1611785992561051368/arcgrid)
+
+> In Figma, you can select a single SVG element, analyze it directly, and export the generated guides and annotations back onto the canvas.
 
 ### ✨ Key Features
 
