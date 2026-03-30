@@ -5,6 +5,7 @@ function pdfEscape(text) {
 }
 
 export function buildExportPdf({ analysis, includeLayers = [], styleConfig = {} }) {
+  const solution = analysis.exportSolution ?? analysis.bestSolution;
   const lines = [
     "%PDF-1.4",
     "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
@@ -22,7 +23,7 @@ export function buildExportPdf({ analysis, includeLayers = [], styleConfig = {} 
     "0 -18 Td",
     `(${pdfEscape("layer=guides")}) Tj`,
     "0 -18 Td",
-    `(${pdfEscape(`score=${analysis.bestSolution.metrics.finalScore}`)}) Tj`,
+    `(${pdfEscape(`score=${solution.metrics.finalScore}`)}) Tj`,
     "0 -18 Td",
     `(${pdfEscape(solverSignature)}) Tj`,
     "ET",

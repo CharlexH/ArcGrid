@@ -1,3 +1,11 @@
+import {
+  PREVIEW_SCALE_MAX,
+  PREVIEW_SCALE_MIN,
+  PREVIEW_SCALE_STEP,
+  clampPreviewOffset,
+  clampPreviewScale,
+} from "./preview-viewport.js";
+
 const i18n = {
   en: {
     title: "ArcGrid",
@@ -116,6 +124,9 @@ const state = {
   selectedCandidateId: null,
   imageBase64: null,
   imageMimeType: null,
+  previewScale: PREVIEW_SCALE_MIN,
+  previewOffset: { x: 0, y: 0 },
+  previewDrag: null,
 };
 
 const svgInput = document.querySelector("#svgInput");
@@ -353,7 +364,8 @@ async function geminiVectorize(apiKey, modelName, imageBase64, mimeType) {
   return svgText;
 }
 const exportSvgBtn = document.querySelector("#exportSvgBtn");
-const signatureEl = document.querySelector("#signature");
+const zoomOutBtn = document.querySelector("#zoomOutBtn");
+const zoomInBtn = document.querySelector("#zoomInBtn");
 const logOverlay = document.querySelector("#logOverlay");
 const svgCanvas = document.querySelector("#svgCanvas");
 const strategySelect = document.querySelector("#strategy");
@@ -363,6 +375,132 @@ const toggleGuides = document.querySelector("#toggleGuides");
 const toggleAnnotations = document.querySelector("#toggleAnnotations");
 const layersControl = document.querySelector("#layersControl");
 const leftControlsGroup = document.querySelector("#leftControlsGroup");
+
+function resetPreviewState() {
+  state.previewScale = PREVIEW_SCALE_MIN;
+  state.previewOffset = { x: 0, y: 0 };
+  state.previewDrag = null;
+}
+
+function getPreviewElements() {
+  return {
+    viewport: document.querySelector("#previewViewport"),
+    stage: document.querySelector("#previewStage"),
+  };
+}
+
+function getPreviewMetrics() {
+  const { viewport, stage } = getPreviewElements();
+  if (!viewport || !stage) return null;
+
+  return {
+    viewportWidth: viewport.clientWidth,
+    viewportHeight: viewport.clientHeight,
+    contentWidth: stage.offsetWidth,
+    contentHeight: stage.offsetHeight,
+    scale: state.previewScale,
+  };
+}
+
+function syncPreviewButtons() {
+  if (!state.analysis) {
+    if (zoomOutBtn) zoomOutBtn.disabled = true;
+    if (zoomInBtn) zoomInBtn.disabled = true;
+    return;
+  }
+
+  if (zoomOutBtn) zoomOutBtn.disabled = state.previewScale <= PREVIEW_SCALE_MIN;
+  if (zoomInBtn) zoomInBtn.disabled = state.previewScale >= PREVIEW_SCALE_MAX;
+}
+
+function applyPreviewTransform() {
+  const { viewport, stage } = getPreviewElements();
+  if (!viewport || !stage) {
+    syncPreviewButtons();
+    return;
+  }
+
+  const metrics = getPreviewMetrics();
+  state.previewOffset = metrics
+    ? clampPreviewOffset(state.previewOffset, metrics)
+    : { x: 0, y: 0 };
+
+  stage.style.transform = `translate(${state.previewOffset.x}px, ${state.previewOffset.y}px) scale(${state.previewScale})`;
+  viewport.classList.toggle("is-draggable", state.previewScale > PREVIEW_SCALE_MIN);
+  viewport.classList.toggle("is-dragging", Boolean(state.previewDrag));
+  syncPreviewButtons();
+}
+
+function setPreviewScale(nextScale) {
+  state.previewScale = clampPreviewScale(nextScale);
+  state.previewDrag = null;
+  applyPreviewTransform();
+}
+
+function nudgePreviewScale(delta) {
+  setPreviewScale(state.previewScale + delta);
+}
+
+function endPreviewDrag(pointerId = null) {
+  const { viewport } = getPreviewElements();
+  if (viewport && pointerId !== null && viewport.hasPointerCapture(pointerId)) {
+    viewport.releasePointerCapture(pointerId);
+  }
+  state.previewDrag = null;
+  applyPreviewTransform();
+}
+
+function handlePreviewPointerDown(event) {
+  const { viewport } = getPreviewElements();
+  if (!viewport || state.previewScale <= PREVIEW_SCALE_MIN) return;
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+
+  state.previewDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    originX: state.previewOffset.x,
+    originY: state.previewOffset.y,
+  };
+
+  viewport.setPointerCapture(event.pointerId);
+  applyPreviewTransform();
+  event.preventDefault();
+}
+
+function handlePreviewPointerMove(event) {
+  const { viewport } = getPreviewElements();
+  if (!viewport || !state.previewDrag || state.previewDrag.pointerId !== event.pointerId) return;
+
+  const metrics = getPreviewMetrics();
+  if (!metrics) return;
+
+  state.previewOffset = clampPreviewOffset(
+    {
+      x: state.previewDrag.originX + (event.clientX - state.previewDrag.startX),
+      y: state.previewDrag.originY + (event.clientY - state.previewDrag.startY),
+    },
+    metrics,
+  );
+
+  applyPreviewTransform();
+  event.preventDefault();
+}
+
+function handlePreviewPointerEnd(event) {
+  if (!state.previewDrag || state.previewDrag.pointerId !== event.pointerId) return;
+  endPreviewDrag(event.pointerId);
+}
+
+function bindPreviewInteractions() {
+  const { viewport } = getPreviewElements();
+  if (!viewport) return;
+
+  viewport.addEventListener("pointerdown", handlePreviewPointerDown);
+  viewport.addEventListener("pointermove", handlePreviewPointerMove);
+  viewport.addEventListener("pointerup", handlePreviewPointerEnd);
+  viewport.addEventListener("pointercancel", handlePreviewPointerEnd);
+}
 
 const MOCK_FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 64 64"><path fill="#89664c" d="m52.2 7.9l2.5 2.6L60 7c2.2-.3 3.2-5-2.8-3.5c-1.5.4-3.8 1.5-5 4.4"/><path fill="#594640" d="M61.1 7c1.8-.7.5-2.8.5-2.8s.4 1.5-2.4 1.9c-4.1.6-5.2 3.6-5.2 3.6l.7.7s2.4-1.8 6.4-3.4"/><path fill="#699635" d="M53.5 6c8.8 9.3 1.2 23.3-7.6 39.5c-.7 1.4-1.5 2.7-2.2 4.1C37.5 61.1 28.4 62.3 23.5 62c-5.5-.4-11-3-14.7-6.9c-3.8-4-6.3-9.8-6.7-15.7c-.4-5.2.5-15.1 11.1-22c1.2-.8 2.5-1.6 3.7-2.4C31.8 5.2 44.7-3.3 53.5 6"/><g fill="#c7e755"><path d="M15 19.9C29.5 10.5 44.3-.5 52 7.7c7.7 8.1-7.5 18.6-16 34.5C27.5 58 17.1 60.7 10.2 53.5C3.4 46.2.4 29.4 15 19.9"/><path d="M11.8 51.8c1.6 1.6 3.3 2.5 5.3 2.6c5.5.4 11.6-4.8 16.7-14.2c2.9-5.5 6.6-10.3 9.9-14.6c5.2-6.7 10-13.1 6.9-16.4c-5.3-5.6-19 3.4-30 10.7c-1.2.8-2.5 1.6-3.7 2.4c-9.1 5.9-9.9 14-9.6 18.3c.3 4.4 2 8.6 4.5 11.2"/></g><path fill="#ffce31" d="M11.8 51.8c1.6 1.6 3.3 2.5 5.3 2.6c5.5.4 11.6-4.8 16.7-14.2c2.9-5.5 6.6-10.3 9.9-14.6c5.2-6.7 10-13.1 6.9-16.4c-5.3-5.6-19 3.4-30 10.7c-1.2.8-2.5 1.6-3.7 2.4c-9.1 5.9-9.9 14-9.6 18.3c.3 4.4 2 8.6 4.5 11.2" opacity=".33"/><path fill="#89664c" d="M17.2 27c6-6.6 14.8-6 16.6-2S33 35 29 39.4c-4.1 4.4-9.6 7.3-13.3 5.5c-3.8-1.8-4.5-11.3 1.5-17.9"/><path fill="#d3976e" d="M16.5 33.6c2.6-3.8 5.3-4.8 4.8-3.9c-.4.9-1.8 3.1-2.6 5.1c-.9 2-1.4 3.7-2.4 4.3c-1 .8-2.3-1.4.2-5.5"/><path fill="#594640" d="M26.4 36.7c-3.5 3.7-7.7 6.6-11.7 7.5c.3.3.6.6 1 .7c3.8 1.9 9.2-1 13.3-5.5C33 35 35.6 29 33.8 25c-.2-.4-.4-.7-.7-1c-.7 4.2-3.3 8.9-6.7 12.7"/></svg>`;
 
@@ -383,16 +521,12 @@ function updateUI() {
     }
   });
 
-  if (state.analysis) {
-    signatureEl.textContent = `${t('signature')}${state.analysis.signature}`;
-  } else {
-    signatureEl.textContent = "";
-    if (document.querySelector("#svgCanvas span")) {
-      document.querySelector("#svgCanvas span").textContent = t('noAnalysis');
-    }
+  if (!state.analysis && document.querySelector("#svgCanvas span")) {
+    document.querySelector("#svgCanvas span").textContent = t('noAnalysis');
   }
 
   // Remove status text updates as logs are now append-based
+  syncPreviewButtons();
 
   if (state.analysis) renderPreview();
   requestAnimationFrame(updateLangSwitchers);
@@ -484,8 +618,9 @@ function animateGrowth() {
 
 function renderPreview() {
   if (!state.analysis) {
+    resetPreviewState();
     svgCanvas.innerHTML = `<span style="color: #98a2ad">${t('noAnalysis')}</span>`;
-    signatureEl.textContent = "";
+    syncPreviewButtons();
     if (leftControlsGroup) leftControlsGroup.style.display = "none";
     const rightControlsGroup = document.querySelector("#rightControlsGroup");
     if (rightControlsGroup) rightControlsGroup.style.display = "none";
@@ -567,11 +702,11 @@ function renderPreview() {
 
   const padX = bbox.width * 0.2;
   const padY = bbox.height * 0.2;
-  svgCanvas.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2}" style="max-width: 560px; max-height: 560px; overflow: visible;">\n${logoLayer}\n${guideCircles}\n${guideLines}\n</svg>`;
+  svgCanvas.innerHTML = `<div id="previewViewport" class="preview-viewport"><div id="previewStage" class="preview-stage"><svg xmlns="http://www.w3.org/2000/svg" width="560" height="560" preserveAspectRatio="xMidYMid meet" viewBox="${bbox.minX - padX} ${bbox.minY - padY} ${bbox.width + padX * 2} ${bbox.height + padY * 2}">\n${logoLayer}\n${guideCircles}\n${guideLines}\n</svg></div></div>`;
 
+  bindPreviewInteractions();
+  applyPreviewTransform();
   animateGrowth();
-
-  signatureEl.textContent = `${t('signature')}${state.analysis.signature}`;
 
   const guidesEnabled = layerSet.has("guides");
   const opacityVal = guidesEnabled ? "1" : "0.4";
@@ -655,6 +790,7 @@ async function analyzeSvg(svgText) {
   }
 
   state.analysis = data;
+  resetPreviewState();
   const fullCandidate = data.candidates?.find(c => c.label && c.label.includes("Full"));
   state.selectedCandidateId = fullCandidate ? fullCandidate.id : data.bestSolution.id;
   setStatus(`${t('analyzed')}`);
@@ -835,6 +971,7 @@ async function exportResult(format) {
       constraints: {
         toleranceMult: parseFloat(document.querySelector("#toleranceRange")?.value || "2.5")
       },
+      selectedCandidateId: state.selectedCandidateId,
       format,
       includeLayers: selectedLayers(),
       styleConfig: {
@@ -870,6 +1007,18 @@ exportSvgBtn.addEventListener("click", async () => {
   }
 });
 
+zoomOutBtn?.addEventListener("click", () => {
+  nudgePreviewScale(-PREVIEW_SCALE_STEP);
+});
+
+zoomInBtn?.addEventListener("click", () => {
+  nudgePreviewScale(PREVIEW_SCALE_STEP);
+});
+
+window.addEventListener("resize", () => {
+  applyPreviewTransform();
+});
+
 
 [toggleLogo, toggleGuides, toggleAnnotations].forEach((checkbox) => {
   checkbox.addEventListener("change", renderPreview);
@@ -896,6 +1045,7 @@ if (toleranceRange && toleranceVal) {
 }
 
 svgInput.value = MOCK_FALLBACK_SVG;
+syncPreviewButtons();
 setStatus(t('statusReady'));
 updateUI();
 

@@ -234,14 +234,37 @@
               <div
                 class="segmented-control flex items-center justify-between min-[800px]:justify-start gap-3 p-1 w-full"
                 style="padding: 6px;">
-                <div class="flex items-baseline gap-2 px-2">
+                <div class="flex items-baseline px-2">
                   <strong data-i18n="previewTitle"
                     class="text-[13px] font-semibold text-[var(--color-ink)]">Preview</strong>
-                  <span id="signature" class="text-[var(--color-muted)] text-[12px] font-mono"></span>
                 </div>
-                <button
-                  class="cursor-pointer rounded-lg border border-line bg-[#f8f9fc] text-[var(--color-ink)] flex items-center justify-center h-[32px] px-3 font-medium text-[12px] whitespace-nowrap transition-all duration-200 hover:bg-white hover:border-[var(--color-accent)] active:translate-y-px"
-                  id="exportSvgBtn" data-i18n="exportSvg">Export SVG</button>
+                <div class="flex items-center gap-2">
+                  <div class="preview-zoom-controls" aria-label="Preview zoom controls">
+                    <button
+                      class="preview-zoom-btn"
+                      id="zoomOutBtn"
+                      type="button"
+                      aria-label="Zoom out"
+                      title="Zoom out">
+                      <svg viewBox="0 0 14 14" aria-hidden="true">
+                        <path d="M3 7h8" />
+                      </svg>
+                    </button>
+                    <button
+                      class="preview-zoom-btn"
+                      id="zoomInBtn"
+                      type="button"
+                      aria-label="Zoom in"
+                      title="Zoom in">
+                      <svg viewBox="0 0 14 14" aria-hidden="true">
+                        <path d="M3 7h8M7 3v8" />
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    class="cursor-pointer rounded-lg border border-line bg-[#f8f9fc] text-[var(--color-ink)] flex items-center justify-center h-[32px] px-3 font-medium text-[12px] whitespace-nowrap transition-all duration-200 hover:bg-white hover:border-[var(--color-accent)] active:translate-y-px"
+                    id="exportSvgBtn" data-i18n="exportSvg">Export SVG</button>
+                </div>
               </div>
             </div>
           </div>

@@ -274,3 +274,92 @@ input[type="range"]:active::-moz-range-thumb {
   cursor: not-allowed;
   pointer-events: none;
 }
+
+.preview-zoom-controls {
+  display: inline-flex;
+  align-items: stretch;
+  height: 32px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8f9fc;
+}
+
+.preview-zoom-btn {
+  min-width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #f8f9fc;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.preview-zoom-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.preview-zoom-btn + .preview-zoom-btn {
+  border-left: 1px solid var(--color-line);
+}
+
+.preview-zoom-btn:hover:not(:disabled) {
+  background: white;
+  color: var(--color-accent);
+}
+
+.preview-zoom-btn:disabled {
+  cursor: default;
+  color: color-mix(in oklab, var(--color-muted) 55%, white);
+  background: #f4f6fb;
+}
+
+.preview-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+}
+
+.preview-stage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  will-change: transform;
+  transition: transform 0.18s ease;
+}
+
+.preview-stage svg {
+  max-width: min(100%, 560px);
+  max-height: min(100%, 560px);
+  overflow: visible;
+}
+
+.preview-viewport.is-draggable {
+  cursor: grab;
+}
+
+.preview-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.preview-viewport.is-dragging .preview-stage {
+  transition: none;
+}

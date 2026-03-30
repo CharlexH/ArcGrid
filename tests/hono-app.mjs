@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { analyzeLogo } from "../src/lib/solver/index.mjs";
 import { buildExportSvg } from "../src/lib/export/svg-export.mjs";
 import { buildExportPdf } from "../src/lib/export/pdf-export.mjs";
+import { resolveExportSolution } from "../src/lib/export/resolve-export-solution.mjs";
 
 export function createTestApp() {
     const app = new Hono().basePath("/api");
@@ -67,6 +68,7 @@ export function createTestApp() {
                 strategy: body.strategy ?? "auto",
                 constraints: body.constraints ?? {},
             });
+            analysis.exportSolution = resolveExportSolution(analysis, body.selectedCandidateId);
 
             const includeLayers = Array.isArray(body.includeLayers)
                 ? body.includeLayers

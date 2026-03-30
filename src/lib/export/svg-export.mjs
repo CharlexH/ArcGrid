@@ -10,7 +10,8 @@ function svgEscape(value) {
 }
 
 export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "annotations"], styleConfig = {} }) {
-  const { input, bestSolution } = analysis;
+  const { input } = analysis;
+  const solution = analysis.exportSolution ?? analysis.bestSolution;
   const { bbox } = input;
 
   const layers = [];
@@ -48,11 +49,11 @@ export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "a
     const lineWeightMult = typeof opts.lineWeightMult === "number" ? opts.lineWeightMult : 2;
     const circleWeightMult = typeof opts.circleWeightMult === "number" ? opts.circleWeightMult : 2;
 
-    const circles = bestSolution.circles
+    const circles = solution.circles
       .map((circle) => `<circle cx="${circle.cx}" cy="${circle.cy}" r="${circle.r}" fill="none" stroke="${circleColorStr}" stroke-width="${swG * circleWeightMult}" stroke-dasharray="${swG * circleWeightMult * 3} ${swG * circleWeightMult * 2}" data-role="${circle.role}"/>`)
       .join("\n");
 
-    const lines = bestSolution.lines
+    const lines = solution.lines
       .map((line) => `<line x1="${line.x1}" y1="${line.y1}" x2="${line.x2}" y2="${line.y2}" stroke="${lineColorStr}" stroke-width="${swG * lineWeightMult}" stroke-dasharray="${swG * lineWeightMult * 2} ${swG * lineWeightMult * 2}" data-role="${line.role}"/>`)
       .join("\n");
 
@@ -64,8 +65,8 @@ export function buildExportSvg({ analysis, includeLayers = ["logo", "guides", "a
     const offsetY = fwA * 0.5;
     layers.push(`<g id="annotations-layer">
       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 1.5 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">${solverSignature}</text>
-      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 3 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Score: ${bestSolution.metrics.finalScore.toFixed(2)} (Fit: ${bestSolution.metrics.fitError.toFixed(2)} | Sym: ${bestSolution.metrics.symmetryScore.toFixed(2)})</text>
-      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 4.5 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Elements: ${bestSolution.lines.length} Lines, ${bestSolution.circles.length} Curves</text>
+      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 3 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Score: ${solution.metrics.finalScore.toFixed(2)} (Fit: ${solution.metrics.fitError.toFixed(2)} | Sym: ${solution.metrics.symmetryScore.toFixed(2)})</text>
+      <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 4.5 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Elements: ${solution.lines.length} Lines, ${solution.circles.length} Curves</text>
       <text x="${bbox.minX - offsetX}" y="${bbox.maxY + fwA * 6 + offsetY}" fill="#111" font-family="monospace" font-size="${fwA}">Strategy: ${analysis.strategy}</text>
     </g>`);
   }

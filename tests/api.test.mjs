@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { withServer } from "./helpers.mjs";
 
 const mockSvg = `<svg id="MOCK_LOGO_ARCGRID_V1" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#111" stroke-width="20"><path d="M96 384 L96 128 L256 128 L416 384 Z" /><path d="M176 300 L256 172 L336 300 Z" /></g></svg>`;
+const mixedGeometrySvg = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M 20 20 L 20 60 C 20 76.5 33.5 90 50 90 C 66.5 90 80 76.5 80 60 L 80 20 L 60 20 L 60 60 C 60 65.5 55.5 70 50 70 C 44.5 70 40 65.5 40 60 L 40 20 Z" fill="red"/></svg>`;
 
 async function testHealth(baseUrl) {
   const response = await fetch(`${baseUrl}/api/health`);
@@ -67,6 +68,39 @@ async function testAnalyzeAndExport(baseUrl) {
   assert.equal(pdfRaw.includes("layer=guides"), true);
 }
 
+async function testExportPrefersFullConstruction(baseUrl) {
+  const analyzeResp = await fetch(`${baseUrl}/api/v1/logo/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      svgText: mixedGeometrySvg,
+      strategy: "auto",
+      constraints: { minScore: 0.5 },
+    }),
+  });
+
+  const analysis = await analyzeResp.json();
+  assert.equal(analyzeResp.status, 200);
+  assert.equal(analysis.bestSolution.id, "cand_geometry_lines");
+  assert.ok(analysis.candidates.some((candidate) => candidate.id === "cand_geometry_auto"));
+
+  const exportSvgResp = await fetch(`${baseUrl}/api/v1/logo/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      svgText: mixedGeometrySvg,
+      format: "svg",
+      includeLayers: ["guides"],
+    }),
+  });
+
+  const exportSvg = await exportSvgResp.json();
+  assert.equal(exportSvgResp.status, 200);
+  const svgRaw = Buffer.from(exportSvg.fileBase64, "base64").toString("utf8");
+  assert.equal((svgRaw.match(/<line\b/g) || []).length > 0, true);
+  assert.equal((svgRaw.match(/<circle\b/g) || []).length > 0, true);
+}
+
 
 async function testInvalidSvg(baseUrl) {
   const response = await fetch(`${baseUrl}/api/v1/logo/analyze`, {
@@ -83,6 +117,7 @@ export async function runApiTests() {
   await withServer(async ({ baseUrl }) => {
     await testHealth(baseUrl);
     await testAnalyzeAndExport(baseUrl);
+    await testExportPrefersFullConstruction(baseUrl);
     await testInvalidSvg(baseUrl);
   });
 }

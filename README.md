@@ -21,9 +21,9 @@
 - 🔄 **双轨输入系统** - 支持直接粘贴/上传 SVG，或通过 Gemini AI 将图像 (PNG/JPG) 一键智能矢量化
 - 🧠 **智能几何分析** - 自动识别图形特征，生成精确的圆、圆弧和对齐线计算方案
 - 🛠️ **强悍的 SVG 解析** - 自动转换描边为填充、过滤冗余元素并完美应对复杂的变换矩阵
-- 🎨 **精细化交互体验** - 实时动态调整检测容差，支持图层切换以及辅线颜色、粗细的自定义
+- 🎨 **精细化交互体验** - 实时动态调整检测容差，支持图层切换、辅线颜色与粗细自定义，以及预览区 `1x-3x` 缩放拖拽查看
 - ✨ **动感可视化** - 渲染过程自带优美的辅助线生长动画
-- 📥 **高质量规格导出** - 一键将生成的制图规范及网格导出为 SVG 或 PDF 格式
+- 📥 **高质量规格导出** - 一键将生成的制图规范及网格导出为 SVG 或 PDF 格式，并在导出时保留完整的直线与曲线辅助线
 
 ### 🚀 快速上手
 
@@ -70,9 +70,9 @@ npm run dev
 - 🔄 **Double-Track Input** - Directly paste/upload SVGs, or use Gemini AI to automatically vectorize raster images (PNG/JPG).
 - 🧠 **Intelligent Analysis** - Automatically detects circles, arcs, and alignment lines to create precise construction candidates.
 - 🛠️ **Robust SVG Processing** - Handles stroke-to-fill conversions, ignores non-renderable `<defs>`, and tackles complex transformations.
-- 🎨 **Interactive UI** - Real-time tolerance adjustment, visibility toggles for layers, and customizable guide colors/weights.
+- 🎨 **Interactive UI** - Real-time tolerance adjustment, layer visibility toggles, customizable guide colors/weights, and `1x-3x` zoomable draggable preview.
 - ✨ **Stunning Visuals** - Features an engaging animated line-drawing effect during validation and rendering.
-- 📥 **Professional Export** - Export your customized construction guides as high-quality SVGs or PDFs natively.
+- 📥 **Professional Export** - Export your customized construction guides as high-quality SVGs or PDFs while preserving the full straight-and-curved guide set.
 
 ### 🚀 Getting Started
 
